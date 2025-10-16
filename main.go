@@ -16,7 +16,7 @@ import (
 
 	"github.com/nikolalohinski/gonja/v2"
 	"github.com/nikolalohinski/gonja/v2/exec"
-	_ "modernc.org/sqlite"
+	"modernc.org/sqlite"
 )
 
 // App holds application-wide dependencies
@@ -112,7 +112,24 @@ func extractPathParams(pattern string) []string {
 	return params
 }
 
+func registerUdfs() {
+	// Register the slugify function with SQLite
+	err := sqlite.RegisterFunction(
+		"slugify",
+		&sqlite.FunctionImpl{
+			NArgs:         1,
+			Deterministic: true,
+			Scalar:        slugify,
+		},
+	)
+	if err != nil {
+		log.Fatalf("Error registering slugify function: %v", err)
+	}
+}
+
 func main() {
+	registerUdfs()
+
 	db, err := sql.Open("sqlite", "./wtf.db")
 	if err != nil {
 		log.Fatalf("Error opening database: %v", err)
