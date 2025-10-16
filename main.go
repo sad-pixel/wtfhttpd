@@ -73,7 +73,8 @@ func registerMethodSpecificRoute(app *App, methodExt, fileName, dir, relativePat
 
 	method := strings.TrimPrefix(strings.ToUpper(methodExt), ".")
 	fmt.Printf("%s %s -> %s\n", method, dir, relativePath)
-	http.HandleFunc(fmt.Sprintf("%s %s/{$}", method, dir), createHandler(app, relativePath))
+	pathPatterns := extractPathParams(fmt.Sprintf("%s %s/{$}", method, dir))
+	http.HandleFunc(fmt.Sprintf("%s %s/{$}", method, dir), createHandler(app, relativePath, pathPatterns))
 }
 
 // registerGenericRoute registers a route that responds to any HTTP method
@@ -83,7 +84,28 @@ func registerGenericRoute(app *App, fileName, dir, relativePath string) {
 	}
 
 	fmt.Printf("ANY %s -> %s\n", dir, relativePath)
-	http.HandleFunc(dir, createHandler(app, relativePath))
+	pathPatterns := extractPathParams(dir)
+	http.HandleFunc(dir, createHandler(app, relativePath, pathPatterns))
+}
+
+// extractPathParams extracts path parameters from a URL pattern
+// For example, if the pattern is "/users/{id}/profile",
+// it will return ["id"]
+func extractPathParams(pattern string) []string {
+	patternParts := strings.Split(strings.Trim(pattern, "/"), "/")
+
+	var params []string
+
+	for _, part := range patternParts {
+		// Check if this part is a parameter (enclosed in {})
+		if len(part) > 2 && part[0] == '{' && part[len(part)-1] == '}' {
+			// Extract the parameter name without the braces
+			paramName := part[1 : len(part)-1]
+			params = append(params, paramName)
+		}
+	}
+
+	return params
 }
 
 func main() {
@@ -105,7 +127,7 @@ func main() {
 	http.ListenAndServe("localhost:8080", nil)
 }
 
-func createHandler(app *App, path string) http.HandlerFunc {
+func createHandler(app *App, path string, pathParams []string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		effectivePath := filepath.Join("./webroot", path)
 
@@ -128,7 +150,7 @@ func createHandler(app *App, path string) http.HandlerFunc {
 			return
 		}
 
-		if err := populateTemporaryTables(tx, r); err != nil {
+		if err := populateTemporaryTables(tx, r, pathParams); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -214,6 +236,8 @@ func setupTemporaryTables(tx *sql.Tx) error {
 		`CREATE TEMPORARY TABLE query_params (name TEXT, value TEXT)`,
 		`CREATE TEMPORARY TABLE env_vars (name TEXT, value TEXT)`,
 		`CREATE TEMPORARY TABLE request_meta (name TEXT, value TEXT)`,
+		`CREATE TEMPORARY TABLE request_headers (name TEXT, value TEXT)`,
+		`CREATE TEMPORARY TABLE path_params (name TEXT, value TEXT)`,
 		`CREATE TEMPORARY TABLE response_meta (name TEXT PRIMARY KEY, value TEXT)`,
 	}
 
@@ -227,9 +251,9 @@ func setupTemporaryTables(tx *sql.Tx) error {
 }
 
 // populateTemporaryTables fills the temporary tables with request data
-func populateTemporaryTables(tx *sql.Tx, r *http.Request) error {
+func populateTemporaryTables(tx *sql.Tx, r *http.Request, pathParams []string) error {
 	stmts := make(map[string]*sql.Stmt)
-	tables := []string{"query_params", "request_meta", "env_vars"}
+	tables := []string{"query_params", "request_meta", "request_headers", "env_vars", "path_params"}
 
 	for _, table := range tables {
 		stmt, err := tx.Prepare(fmt.Sprintf("INSERT INTO %s (name, value) VALUES (?, ?)", table))
@@ -250,9 +274,15 @@ func populateTemporaryTables(tx *sql.Tx, r *http.Request) error {
 
 	for key, values := range r.Header {
 		for _, value := range values {
-			if _, err := stmts["request_meta"].Exec(key, value); err != nil {
+			if _, err := stmts["request_headers"].Exec(key, value); err != nil {
 				return fmt.Errorf("Error inserting header: %v", err)
 			}
+		}
+	}
+
+	for _, param := range pathParams {
+		if _, err := stmts["path_params"].Exec(param, r.PathValue(param)); err != nil {
+			return fmt.Errorf("Error inserting path params: %v", err)
 		}
 	}
 
@@ -342,8 +372,10 @@ func cleanupTemporaryTables(tx *sql.Tx) error {
 	tables := []string{
 		"query_params",
 		"request_meta",
+		"request_headers",
 		"env_vars",
 		"response_meta",
+		"path_params",
 	}
 
 	for _, table := range tables {
