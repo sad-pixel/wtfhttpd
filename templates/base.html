@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>
+            {% block title %}{% endblock %} - wtfhttpd
+        </title>
+
+        <link rel="stylesheet" href="https://unpkg.com/terminal.css@0.7.4/dist/terminal.min.css" />
+
+        <style>
+                    :root {
+            --global-font-size: 15px;
+            --global-line-height: 1.4em;
+            --global-space: 10px;
+            --font-stack: Menlo, Monaco, Lucida Console, Liberation Mono,
+            DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace,
+            serif;
+            --mono-font-stack: Menlo, Monaco, Lucida Console, Liberation Mono,
+            DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace,
+            serif;
+            --background-color: #222225;
+            --page-width: 60em;
+            --font-color: #e8e9ed;
+            --invert-font-color: #222225;
+            --secondary-color: #a3abba;
+            --tertiary-color: #a3abba;
+            --primary-color: #62c4ff;
+            --error-color: #ff3c74;
+            --progress-bar-background: #3f3f44;
+            --progress-bar-fill: #62c4ff;
+            --code-bg-color: #3f3f44;
+            --input-style: solid;
+            --display-h1-decoration: none;
+        }
+        </style>
+    </head>
+    <body class="terminal">
+        <div class="container">
+            <div class="terminal-nav">
+                <div class="terminal-logo">
+                    <div class="logo terminal-prompt"><a href="#" class="no-style">WtfHttpd</a></div>
+                </div>
+
+                <!-- <nav class="terminal-menu">
+                    <ul>
+                        <li><a class="menu-item" href="#">Item #1</a></li>
+                        <li><a class="menu-item active" href="#">Active Item #2</a></li>
+                        <li><a class="menu-item" href="#">Item #3</a></li>
+                    </ul>
+                </nav> -->
+
+            </div>
+            {% block content %}{% endblock %}
+            <hr>
+            <footer>
+                Version 0.0.1 | With <span style="color: red;">&hearts;</span> by <a href="https://ishan.page">Ishan</a>
+            </footer>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Server Stats{% endblock %}
+{% block heading %}WtfHttpd{% endblock %}
+
+{% block content %}
+    <section>
+        <header><h2 id="Cards">Server Statistics</h2></header>
+        <div class="terminal-card-container" style="display: flex; gap: 20px;">
+            <div class="terminal-card" style="flex: 1;">
+                <header>Server Uptime</header>
+                <div>
+                    {{ ctx.uptime }}
+                </div>
+            </div>
+            <div class="terminal-card" style="flex: 1;">
+                <header>Total Hits Processed</header>
+                <div>
+                    {{ ctx.hits }}
+                </div>
+            </div>
+            <div class="terminal-card" style="flex: 1;">
+                <header>Discovered Routes</header>
+                <div>
+                    {{ ctx.routes }}
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

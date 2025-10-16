@@ -2,12 +2,14 @@ package main
 
 import (
 	"database/sql"
+	"database/sql/driver"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -24,6 +26,7 @@ type App struct {
 	DB            *sql.DB
 	startedAt     time.Time
 	hitsProcessed atomic.Int64
+	totalRoutes   atomic.Int64
 }
 
 // setupRoutes walks through the webroot directory and sets up HTTP routes
@@ -63,6 +66,7 @@ func processFile(app *App, path string, info os.FileInfo, err error) error {
 	} else {
 		registerGenericRoute(app, fileName, dir, relativePath)
 	}
+	app.totalRoutes.Add(1)
 
 	return nil
 }
@@ -112,6 +116,26 @@ func extractPathParams(pattern string) []string {
 	return params
 }
 
+var nonAlphanumericRegex = regexp.MustCompile(`[^a-z0-9]+`)
+
+func slugify(_ *sqlite.FunctionContext, args []driver.Value) (driver.Value, error) {
+	if len(args) != 1 {
+		return nil, fmt.Errorf("slugify supports 1 argument, got %d", len(args))
+	}
+	s, ok := args[0].(string)
+	if !ok {
+		return nil, fmt.Errorf("slugify supports arguments of string type, got %T", args[0])
+	}
+
+	// 1. Convert to lowercase
+	result := strings.ToLower(s)
+	// 2. Replace non-alphanumeric characters with a hyphen
+	result = nonAlphanumericRegex.ReplaceAllString(result, "-")
+	// 3. Trim leading/trailing hyphens
+	result = strings.Trim(result, "-")
+	return result, nil
+}
+
 func registerUdfs() {
 	// Register the slugify function with SQLite
 	err := sqlite.RegisterFunction(
@@ -148,50 +172,35 @@ func main() {
 	log.Println("Server starting on localhost:8080")
 	// Add a handler for the _wtf endpoint to show server stats
 	http.HandleFunc("/_wtf", func(w http.ResponseWriter, r *http.Request) {
-		log.Println("/_wtf endpoint accessed")
-
-		// Calculate uptime
-		log.Println("Calculating uptime")
 		uptime := time.Since(app.startedAt).Round(time.Second)
-		log.Printf("Uptime: %s", uptime)
-
-		log.Println("Getting hit count")
-		hits := app.hitsProcessed.Load()
-		log.Printf("Hits processed: %d", hits)
-
 		// Set content type
-		log.Println("Setting content type header")
 		w.Header().Set("Content-Type", "text/html")
 
 		// Read the template file
-		log.Println("Loading template file from ./templates/index.html")
 		tpl, err := gonja.FromFile("./templates/index.html")
 		if err != nil {
 			log.Printf("Error loading template: %v", err)
 			http.Error(w, "Error loading template: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
-		log.Println("Template loaded successfully")
 
 		// Prepare template data with separate uptime and hits values
-		log.Println("Preparing template data")
+
 		tplData := exec.NewContext(map[string]interface{}{
 			"ctx": map[string]interface{}{
 				"uptime": uptime.String(),
-				"hits":   hits,
+				"hits":   app.hitsProcessed.Load(),
+				"routes": app.totalRoutes.Load(),
 			},
 		})
-		log.Println("Template data prepared")
 
 		// Render the template
-		log.Println("Rendering template")
 		err = tpl.Execute(w, tplData)
 		if err != nil {
 			log.Printf("Error executing template: %v", err)
 			http.Error(w, "Error executing template: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
-		log.Println("Template rendered successfully")
 	})
 	http.ListenAndServe("localhost:8080", nil)
 }
