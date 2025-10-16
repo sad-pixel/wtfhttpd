@@ -11,6 +11,8 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync/atomic"
+	"time"
 
 	"github.com/nikolalohinski/gonja/v2"
 	"github.com/nikolalohinski/gonja/v2/exec"
@@ -19,7 +21,9 @@ import (
 
 // App holds application-wide dependencies
 type App struct {
-	DB *sql.DB
+	DB            *sql.DB
+	startedAt     time.Time
+	hitsProcessed atomic.Int64
 }
 
 // setupRoutes walks through the webroot directory and sets up HTTP routes
@@ -116,7 +120,8 @@ func main() {
 	defer db.Close()
 
 	app := &App{
-		DB: db,
+		DB:        db,
+		startedAt: time.Now(),
 	}
 
 	if err := setupRoutes(app); err != nil {
@@ -124,11 +129,59 @@ func main() {
 	}
 
 	log.Println("Server starting on localhost:8080")
+	// Add a handler for the _wtf endpoint to show server stats
+	http.HandleFunc("/_wtf", func(w http.ResponseWriter, r *http.Request) {
+		log.Println("/_wtf endpoint accessed")
+
+		// Calculate uptime
+		log.Println("Calculating uptime")
+		uptime := time.Since(app.startedAt).Round(time.Second)
+		log.Printf("Uptime: %s", uptime)
+
+		log.Println("Getting hit count")
+		hits := app.hitsProcessed.Load()
+		log.Printf("Hits processed: %d", hits)
+
+		// Set content type
+		log.Println("Setting content type header")
+		w.Header().Set("Content-Type", "text/html")
+
+		// Read the template file
+		log.Println("Loading template file from ./templates/index.html")
+		tpl, err := gonja.FromFile("./templates/index.html")
+		if err != nil {
+			log.Printf("Error loading template: %v", err)
+			http.Error(w, "Error loading template: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		log.Println("Template loaded successfully")
+
+		// Prepare template data with separate uptime and hits values
+		log.Println("Preparing template data")
+		tplData := exec.NewContext(map[string]interface{}{
+			"ctx": map[string]interface{}{
+				"uptime": uptime.String(),
+				"hits":   hits,
+			},
+		})
+		log.Println("Template data prepared")
+
+		// Render the template
+		log.Println("Rendering template")
+		err = tpl.Execute(w, tplData)
+		if err != nil {
+			log.Printf("Error executing template: %v", err)
+			http.Error(w, "Error executing template: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		log.Println("Template rendered successfully")
+	})
 	http.ListenAndServe("localhost:8080", nil)
 }
 
 func createHandler(app *App, path string, pathParams []string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		app.hitsProcessed.Add(1)
 		effectivePath := filepath.Join("./webroot", path)
 
 		content, err := os.ReadFile(effectivePath)
