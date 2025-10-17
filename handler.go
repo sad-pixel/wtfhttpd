@@ -43,7 +43,13 @@ func createHandler(app *App, path string, pathParams []string) http.HandlerFunc 
 			return
 		}
 
-		results, err := executeQuery(tx, string(content))
+		varsMap := make(map[string]interface{})
+
+		for _, param := range pathParams {
+			varsMap[param] = r.PathValue(param)
+		}
+
+		results, err := executeQuery(tx, string(content), varsMap)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -118,9 +124,17 @@ func createHandler(app *App, path string, pathParams []string) http.HandlerFunc 
 	}
 }
 
+func namedParamsToArgs(varsMap map[string]interface{}) []interface{} {
+	args := make([]interface{}, 0, len(varsMap))
+	for name, value := range varsMap {
+		args = append(args, sql.Named(name, value))
+	}
+	return args
+}
+
 // executeQuery runs the SQL query and returns the results
-func executeQuery(tx *sql.Tx, query string) ([]map[string]interface{}, error) {
-	rows, err := tx.Query(query)
+func executeQuery(tx *sql.Tx, query string, varsMap map[string]interface{}) ([]map[string]interface{}, error) {
+	rows, err := tx.Query(query, namedParamsToArgs(varsMap)...)
 	if err != nil {
 		return nil, fmt.Errorf("Error executing SQL: %v", err)
 	}

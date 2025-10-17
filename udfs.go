@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql/driver"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -50,6 +51,37 @@ func slugify(_ *sqlite.FunctionContext, args []driver.Value) (driver.Value, erro
 	return result, nil
 }
 
+var ErrEarlyReturn = errors.New("WTFHTTPD_EARLY_RETURN")
+
+func wtfAbort(_ *sqlite.FunctionContext, args []driver.Value) (driver.Value, error) {
+	// Handle different argument counts
+	if len(args) == 0 {
+		// Default to 500 Internal Server Error if no args provided
+		return nil, fmt.Errorf("HTTP_ERROR:500:Internal Server Error")
+	} else if len(args) == 1 {
+		// Use the first arg as HTTP status code
+		code, ok := args[0].(int64)
+		if !ok {
+			return nil, fmt.Errorf("HTTP_ERROR:400:First argument must be a numeric status code")
+		}
+		return nil, fmt.Errorf("HTTP_ERROR:%d", code)
+	} else if len(args) == 2 {
+		// Use first arg as status code and second as message
+		code, ok := args[0].(int64)
+		if !ok {
+			return nil, fmt.Errorf("HTTP_ERROR:400:First argument must be a numeric status code")
+		}
+
+		message, ok := args[1].(string)
+		if !ok {
+			message = fmt.Sprintf("%v", args[1])
+		}
+
+		return nil, fmt.Errorf("HTTP_ERROR:%d:%s", code, message)
+	}
+	return nil, fmt.Errorf("wtf_abort supports up to 2 arguments, got %d", len(args))
+}
+
 func registerUdfs() {
 	// Register the slugify function with SQLite
 	err := sqlite.RegisterFunction(
@@ -58,6 +90,17 @@ func registerUdfs() {
 			NArgs:         1,
 			Deterministic: true,
 			Scalar:        slugify,
+		},
+	)
+	if err != nil {
+		log.Fatalf("Error registering slugify function: %v", err)
+	}
+	err = sqlite.RegisterFunction(
+		"wtf_abort",
+		&sqlite.FunctionImpl{
+			NArgs:         -1, // variadic - can take 0, 1, 2
+			Deterministic: true,
+			Scalar:        wtfAbort,
 		},
 	)
 	if err != nil {
