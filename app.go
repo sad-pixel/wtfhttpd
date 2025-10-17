@@ -15,6 +15,7 @@ import (
 
 // App holds application-wide dependencies
 type App struct {
+	Config        *Config
 	DB            *sql.DB
 	startedAt     time.Time
 	hitsProcessed atomic.Int64
@@ -62,7 +63,7 @@ func (app *App) liveReloader() {
 	defer watcher.Close()
 
 	// Initial setup of watchers for all existing directories
-	if err := filepath.Walk("./webroot", func(path string, info os.FileInfo, err error) error {
+	if err := filepath.Walk(app.Config.WebRoot, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return watcher.Add(path)
 		}
@@ -98,7 +99,7 @@ func (app *App) liveReloader() {
 							// If directories were added or removed, we need to refresh our watchers
 							if event.Has(fsnotify.Create) || event.Has(fsnotify.Remove) {
 								// Re-scan all directories to ensure we're watching everything
-								filepath.Walk("./webroot", func(path string, info os.FileInfo, err error) error {
+								filepath.Walk(app.Config.WebRoot, func(path string, info os.FileInfo, err error) error {
 									if err == nil && info != nil && info.IsDir() {
 										watcher.Add(path)
 									}

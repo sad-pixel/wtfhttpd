@@ -17,7 +17,7 @@ import (
 func createHandler(app *App, path string, pathParams []string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		app.hitsProcessed.Add(1)
-		effectivePath := filepath.Join("./webroot", path)
+		effectivePath := filepath.Join(app.Config.WebRoot, path)
 
 		content, err := os.ReadFile(effectivePath)
 		if err != nil {
@@ -141,7 +141,21 @@ func createHandler(app *App, path string, pathParams []string) http.HandlerFunc 
 
 		if tplName != "" {
 			w.Header().Set("Content-Type", "text/html")
-			template, err := gonja.FromFile("./webroot/" + tplName)
+			// Prevent path traversal by ensuring the template path is within webroot
+			cleanPath := filepath.Clean(tplName)
+			if strings.Contains(cleanPath, "..") || strings.HasPrefix(cleanPath, "/") {
+				http.Error(w, "Invalid template path", http.StatusBadRequest)
+				return
+			}
+
+			templatePath := filepath.Join(app.Config.WebRoot, cleanPath)
+			// Ensure the path is still within webroot after cleaning
+			if !strings.HasPrefix(filepath.Clean(templatePath), filepath.Clean(app.Config.WebRoot)) {
+				http.Error(w, "Invalid template path", http.StatusBadRequest)
+				return
+			}
+
+			template, err := gonja.FromFile(templatePath)
 			if err != nil {
 				http.Error(w, "Error loading template: "+err.Error(), http.StatusInternalServerError)
 				return

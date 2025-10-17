@@ -7,8 +7,8 @@
 [x] Bound variables for form, query params
 [x] Multiple params binding
 [x] bcrypt functions
+[x] Config file support
 [ ] More context in templates
-[ ] Config files
 [ ] Multiple queries
 [ ] Validations
 [ ] Add nice logging

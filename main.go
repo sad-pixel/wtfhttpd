@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -14,13 +15,16 @@ func main() {
 	gonja.DefaultConfig.AutoEscape = true
 	udfs.RegisterUdfs()
 
-	db, err := sql.Open("sqlite", "./wtf.db")
+	config := LoadConfig()
+
+	db, err := sql.Open("sqlite", config.Db)
 	if err != nil {
 		log.Fatalf("Error opening database: %v", err)
 	}
 	defer db.Close()
 
 	app := &App{
+		Config:    config,
 		DB:        db,
 		startedAt: time.Now(),
 	}
@@ -29,10 +33,13 @@ func main() {
 		return
 	}
 
-	go app.liveReloader()
+	if config.LiveReload {
+		log.Println("Starting Live Reloader")
+		go app.liveReloader()
+	}
 
-	log.Println("Server starting on localhost:8080")
-	// // Add a handler for the _wtf endpoint to show server stats
-	// http.HandleFunc("/_wtf", app.serveAdmin)
-	http.ListenAndServe("localhost:8080", app)
+	listen := fmt.Sprintf("%s:%d", config.Host, config.Port)
+
+	log.Println("Server starting on ", listen)
+	http.ListenAndServe(listen, app)
 }

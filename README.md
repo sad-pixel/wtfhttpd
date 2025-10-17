@@ -64,3 +64,15 @@ To control the response, you can INSERT into the `response_meta` table:
 Templates use jinja2 syntax, and can be anywhere in the webroot.
 
 A built-in status page is available at `/\_wtf` to view server statistics like uptime and the number of discovered routes.
+
+## Configuration
+
+`wtfhttpd` may be configured using a `wtf.toml` config file. The default values are shown below
+
+```toml
+host = "127.0.0.1"
+port = 8080
+db = "wtf.db"
+web_root = "webroot"
+live_reload = true
+```

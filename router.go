@@ -11,7 +11,7 @@ import (
 
 // setupRoutes walks through the webroot directory and sets up HTTP routes
 func setupRoutes(app *App, mux *http.ServeMux) error {
-	return filepath.Walk("./webroot", func(path string, info os.FileInfo, err error) error {
+	return filepath.Walk(app.Config.WebRoot, func(path string, info os.FileInfo, err error) error {
 		return processFile(app, path, info, err, mux)
 	})
 }
@@ -27,7 +27,7 @@ func processFile(app *App, path string, info os.FileInfo, err error, mux *http.S
 	}
 
 	// This code definitely has bugs, but it's ok for now
-	relativePath := strings.TrimPrefix(path, "webroot")
+	relativePath := strings.TrimPrefix(path, app.Config.WebRoot)
 	file := filepath.Base(relativePath)
 	ext := filepath.Ext(file)
 
