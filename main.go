@@ -23,6 +23,19 @@ func main() {
 	}
 	defer db.Close()
 
+	// Create the wtf_routes table to track routes
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS wtf_routes (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			method TEXT NOT NULL,
+			path TEXT NOT NULL,
+			file TEXT NOT NULL
+		)
+	`)
+	if err != nil {
+		log.Fatalf("Error creating wtf_routes table: %v", err)
+	}
+
 	app := &App{
 		Config:    config,
 		DB:        db,

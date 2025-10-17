@@ -63,7 +63,7 @@ To control the response, you can INSERT into the `response_meta` table:
 
 Templates use jinja2 syntax, and can be anywhere in the webroot.
 
-A built-in status page is available at `/\_wtf` to view server statistics like uptime and the number of discovered routes.
+A built-in status page is available at `/_wtf` to view server statistics like uptime and discovered routes.
 
 ## Additional Functions
 
@@ -74,6 +74,16 @@ The following extra functions are available inside the sql environment:
 - `bcrypt_verify(password, hash)` - Verifies bcrypt hashed secrets
 - `checksum_md5(content)` - Creates a md5 checksum (DO NOT USE FOR PASSWORDS)
 - `checksum_sha1(content)` - Creates a sha1 checksum (DO NOT USE FOR PASSWORDS)
+
+## Route introspection
+
+All registered routes are available in the `wtf_routes` table. This is used in the status page, but is also available for sql scripts to query.
+
+## Misc Notes
+
+- JSON/XML post bodies are not yet supported
+- Every request runs in it's own transaction, and since sqlite doesn't support nested transactions, you may not use transactions in your sql queries.
+- A `/` is always added to the end of every path. This is may be fixed later.
 
 ## Configuration
 

@@ -27,4 +27,54 @@
             </div>
         </div>
     </section>
+
+    <br>
+
+    <section> 
+        {% if routes_list %}
+        <div>
+            The following routes are currently loaded: 
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>Route</th>
+                    <th>Handler</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for route in routes_list %}
+                <tr>
+                    <td>
+                        {% if route.method == "GET" %}
+                            <span style="color: #4CAF50;">{{ route.method }}</span>
+                        {% elif route.method == "POST" %}
+                            <span style="color: #2196F3;">{{ route.method }}</span>
+                        {% elif route.method == "PUT" %}
+                            <span style="color: #FF9800;">{{ route.method }}</span>
+                        {% elif route.method == "DELETE" %}
+                            <span style="color: #F44336;">{{ route.method }}</span>
+                        {% elif route.method == "PATCH" %}
+                            <span style="color: #9C27B0;">{{ route.method }}</span>
+                        {% elif route.method == "OPTIONS" %}
+                            <span style="color: #607D8B;">{{ route.method }}</span>
+                        {% elif route.method == "ANY" %}
+                            <span style="color: #795548;">{{ route.method }}</span>
+                        {% else %}
+                            <span>{{ route.method }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ route.path }}</td>
+                    <td>{{ route.file }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            No routes have been discovered yet.
+        </div>
+        {% endif %}
+    </section>
 {% endblock %}

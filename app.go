@@ -36,12 +36,19 @@ func (app *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (app *App) reloadRoutes() error {
 	log.Println("Reloading Routes...")
 
+	// Clear the wtf_routes table before reloading
+	_, err := app.DB.Exec("DELETE FROM wtf_routes")
+	if err != nil {
+		log.Printf("Error truncating wtf_routes table: %v", err)
+		return err
+	}
+
 	app.totalRoutes.Store(0)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/_wtf", app.serveAdmin)
 
-	err := setupRoutes(app, mux)
+	err = setupRoutes(app, mux)
 	if err != nil {
 		log.Printf("Error during route reload: %v", err)
 		return err

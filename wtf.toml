@@ -2,4 +2,4 @@ host = "127.0.0.1"
 port = 8080
 db = "wtf.db"
 web_root = "webroot"
-live_reload = false
+live_reload = true

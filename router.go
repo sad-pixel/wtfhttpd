@@ -69,6 +69,12 @@ func registerMethodSpecificRoute(app *App, methodExt, fileName, dir, relativePat
 		routePath = fmt.Sprintf("%s{$}", dir)
 	}
 
+	_, err := app.DB.Exec("INSERT INTO wtf_routes (path, method, file) VALUES (?, ?, ?)",
+		routePath, method, relativePath)
+	if err != nil {
+		fmt.Printf("Error inserting into wtf_routes table: %v\n", err)
+	}
+
 	mux.HandleFunc(fmt.Sprintf("%s %s", method, routePath), createHandler(app, relativePath, pathPatterns))
 }
 
@@ -86,6 +92,12 @@ func registerGenericRoute(app *App, fileName, dir, relativePath string, mux *htt
 		routePath = fmt.Sprintf("%s/{$}", dir)
 	} else {
 		routePath = fmt.Sprintf("%s{$}", dir)
+	}
+
+	_, err := app.DB.Exec("INSERT INTO wtf_routes (path, method, file) VALUES (?, ?, ?)",
+		routePath, "ANY", relativePath)
+	if err != nil {
+		fmt.Printf("Error inserting into wtf_routes table: %v\n", err)
 	}
 
 	mux.HandleFunc(routePath, createHandler(app, relativePath, pathPatterns))
