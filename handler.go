@@ -42,11 +42,54 @@ func createHandler(app *App, path string, pathParams []string) http.HandlerFunc 
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-
 		varsMap := make(map[string]interface{})
 
+		// First add path parameters (highest precedence)
 		for _, param := range pathParams {
 			varsMap[param] = r.PathValue(param)
+		}
+
+		// Parse form data (including multipart forms)
+		if err := r.ParseForm(); err == nil {
+			// Add form parameters (second precedence)
+			for key, values := range r.Form {
+				// Check if this is an array parameter
+				if strings.HasSuffix(key, "[]") {
+					// Remove the [] suffix and store as JSON string
+					arrayKey := key[:len(key)-2]
+					if _, exists := varsMap[arrayKey]; !exists {
+						jsonData, err := json.Marshal(values)
+						if err == nil {
+							varsMap[arrayKey] = string(jsonData)
+						}
+					}
+				} else if _, exists := varsMap[key]; !exists {
+					// For non-array parameters, use the first value if not already set by path params
+					if len(values) > 0 {
+						varsMap[key] = values[0]
+					}
+				}
+			}
+		}
+
+		// Add query parameters (lowest precedence)
+		for key, values := range r.URL.Query() {
+			// Check if this is an array parameter
+			if strings.HasSuffix(key, "[]") {
+				// Remove the [] suffix and store as JSON string
+				arrayKey := key[:len(key)-2]
+				if _, exists := varsMap[arrayKey]; !exists {
+					jsonData, err := json.Marshal(values)
+					if err == nil {
+						varsMap[arrayKey] = string(jsonData)
+					}
+				}
+			} else if _, exists := varsMap[key]; !exists {
+				// For non-array parameters, use the first value if not already set by path or form params
+				if len(values) > 0 {
+					varsMap[key] = values[0]
+				}
+			}
 		}
 
 		results, err := executeQuery(tx, string(content), varsMap)
