@@ -61,8 +61,16 @@ func registerMethodSpecificRoute(app *App, methodExt, fileName, dir, relativePat
 
 	method := strings.TrimPrefix(strings.ToUpper(methodExt), ".")
 	fmt.Printf("%s %s -> %s\n", method, dir, relativePath)
-	pathPatterns := extractPathParams(fmt.Sprintf("%s %s/{$}", method, dir))
-	http.HandleFunc(fmt.Sprintf("%s %s/{$}", method, dir), createHandler(app, relativePath, pathPatterns))
+	pathPatterns := extractPathParams(dir)
+
+	routePath := dir
+	if !strings.HasSuffix(dir, "/") {
+		routePath = fmt.Sprintf("%s/{$}", dir)
+	} else {
+		routePath = fmt.Sprintf("%s{$}", dir)
+	}
+
+	http.HandleFunc(fmt.Sprintf("%s %s", method, routePath), createHandler(app, relativePath, pathPatterns))
 }
 
 // registerGenericRoute registers a route that responds to any HTTP method
@@ -73,5 +81,13 @@ func registerGenericRoute(app *App, fileName, dir, relativePath string) {
 
 	fmt.Printf("ANY %s -> %s\n", dir, relativePath)
 	pathPatterns := extractPathParams(dir)
-	http.HandleFunc(dir, createHandler(app, relativePath, pathPatterns))
+
+	routePath := dir
+	if !strings.HasSuffix(dir, "/") {
+		routePath = fmt.Sprintf("%s/{$}", dir)
+	} else {
+		routePath = fmt.Sprintf("%s{$}", dir)
+	}
+
+	http.HandleFunc(routePath, createHandler(app, relativePath, pathPatterns))
 }
