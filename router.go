@@ -10,14 +10,14 @@ import (
 )
 
 // setupRoutes walks through the webroot directory and sets up HTTP routes
-func setupRoutes(app *App) error {
+func setupRoutes(app *App, mux *http.ServeMux) error {
 	return filepath.Walk("./webroot", func(path string, info os.FileInfo, err error) error {
-		return processFile(app, path, info, err)
+		return processFile(app, path, info, err, mux)
 	})
 }
 
 // processFile handles each file found during directory walk
-func processFile(app *App, path string, info os.FileInfo, err error) error {
+func processFile(app *App, path string, info os.FileInfo, err error, mux *http.ServeMux) error {
 	if err != nil {
 		return err
 	}
@@ -42,17 +42,16 @@ func processFile(app *App, path string, info os.FileInfo, err error) error {
 	methods := []string{".get", ".post", ".put", ".patch", ".delete", ".options"}
 
 	if secondLevelExt != "" && slices.Contains(methods, secondLevelExt) {
-		registerMethodSpecificRoute(app, secondLevelExt, fileName, dir, relativePath)
+		registerMethodSpecificRoute(app, secondLevelExt, fileName, dir, relativePath, mux)
 	} else {
-		registerGenericRoute(app, fileName, dir, relativePath)
+		registerGenericRoute(app, fileName, dir, relativePath, mux)
 	}
 	app.totalRoutes.Add(1)
-
 	return nil
 }
 
 // registerMethodSpecificRoute registers a route for a specific HTTP method
-func registerMethodSpecificRoute(app *App, methodExt, fileName, dir, relativePath string) {
+func registerMethodSpecificRoute(app *App, methodExt, fileName, dir, relativePath string, mux *http.ServeMux) {
 	effectiveFileName := strings.TrimSuffix(fileName, methodExt)
 
 	if effectiveFileName != "index" {
@@ -70,11 +69,11 @@ func registerMethodSpecificRoute(app *App, methodExt, fileName, dir, relativePat
 		routePath = fmt.Sprintf("%s{$}", dir)
 	}
 
-	http.HandleFunc(fmt.Sprintf("%s %s", method, routePath), createHandler(app, relativePath, pathPatterns))
+	mux.HandleFunc(fmt.Sprintf("%s %s", method, routePath), createHandler(app, relativePath, pathPatterns))
 }
 
 // registerGenericRoute registers a route that responds to any HTTP method
-func registerGenericRoute(app *App, fileName, dir, relativePath string) {
+func registerGenericRoute(app *App, fileName, dir, relativePath string, mux *http.ServeMux) {
 	if fileName != "index" {
 		dir = filepath.Join(dir, fileName)
 	}
@@ -89,5 +88,5 @@ func registerGenericRoute(app *App, fileName, dir, relativePath string) {
 		routePath = fmt.Sprintf("%s{$}", dir)
 	}
 
-	http.HandleFunc(routePath, createHandler(app, relativePath, pathPatterns))
+	mux.HandleFunc(routePath, createHandler(app, relativePath, pathPatterns))
 }

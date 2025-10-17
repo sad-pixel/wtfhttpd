@@ -2,3 +2,5 @@ webroot2/
 webroot/
 wtf.db
 wtfhttpd
+combined_go_files.txt
+dump.py
