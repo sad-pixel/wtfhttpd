@@ -32,6 +32,7 @@ For each request, wtfhttpd creates a set of temporary tables that you can query.
 - `query_params`: Contains URL query string parameters.
   - `SELECT value FROM query_params WHERE name = 'search'`
 - `request_headers`: Contains all HTTP request headers.
+- `request_form`: Contains all request form data fields (uploads aren't supported yet!)
 - `request_meta`: Contains metadata like `method`, `path`, and `remote_addr`.
 - `env_vars`: Contains environment variables from the server process.
 

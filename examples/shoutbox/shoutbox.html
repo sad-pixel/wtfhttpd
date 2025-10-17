@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WTF SQL</title>
+    <link rel="stylesheet" href="https://unpkg.com/sakura.css/css/sakura.css" type="text/css">
+    <style>
+        .container {
+            margin-bottom: 2rem;
+        }
+        .info {
+            margin-bottom: 1.5rem;
+        }
+        table {
+            width: 100%;
+        }
+        th, td {
+            padding: 0.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>WTF Shoutbox</h1>
+
+    <div class="info">
+        <p>This is a simple SQL-powered web application.</p>
+    </div>
+
+    <div class="container">
+        <h2>Post a Message</h2>
+        <form method="post">
+            <div>
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div style="margin-top: 10px;">
+                <label for="comment">Comment:</label>
+                <textarea id="comment" name="comment" rows="4" cols="50" required></textarea>
+            </div>
+            <div style="margin-top: 10px;">
+                <button type="submit">Submit</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="container">
+        <h2>Messages</h2>
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background-color: #f2f2f2;">
+                    <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Name</th>
+                    <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Comment</th>
+                    <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for message in ctx %}
+                <tr>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">{{ message.name }}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">{{ message.comment }}</td>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">{{ message.created_at }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</body>
+
+</html>

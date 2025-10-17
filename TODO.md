@@ -1,6 +1,6 @@
 [x] Refactor a bit
-[ ] Fix the routing bugs
-[ ] POST request handling
+[x] Fix the routing bugs
+[x] POST request handling
 [ ] Validations
 [ ] Add nice logging
 [ ] Config files
