@@ -65,6 +65,16 @@ Templates use jinja2 syntax, and can be anywhere in the webroot.
 
 A built-in status page is available at `/\_wtf` to view server statistics like uptime and the number of discovered routes.
 
+## Additional Functions
+
+The following extra functions are available inside the sql environment:
+
+- `slugify(path)` - Returns a slug version of the given path
+- `bcrypt_hash(password, [cost])` - Creates a hash for secrets
+- `bcrypt_verify(password, hash)` - Verifies bcrypt hashed secrets
+- `checksum_md5(content)` - Creates a md5 checksum (DO NOT USE FOR PASSWORDS)
+- `checksum_sha1(content)` - Creates a sha1 checksum (DO NOT USE FOR PASSWORDS)
+
 ## Configuration
 
 `wtfhttpd` may be configured using a `wtf.toml` config file. The default values are shown below
@@ -76,3 +86,15 @@ db = "wtf.db"
 web_root = "webroot"
 live_reload = true
 ```
+
+## License
+
+MIT
+
+Copyright 2025 Ishan Das Sharma
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
