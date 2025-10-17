@@ -1,35 +1,13 @@
-package main
+package udfs
 
 import (
 	"database/sql/driver"
-	"errors"
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
 
 	"modernc.org/sqlite"
 )
-
-// extractPathParams extracts path parameters from a URL pattern
-// For example, if the pattern is "/users/{id}/profile",
-// it will return ["id"]
-func extractPathParams(pattern string) []string {
-	patternParts := strings.Split(strings.Trim(pattern, "/"), "/")
-
-	var params []string
-
-	for _, part := range patternParts {
-		// Check if this part is a parameter (enclosed in {})
-		if len(part) > 2 && part[0] == '{' && part[len(part)-1] == '}' {
-			// Extract the parameter name without the braces
-			paramName := part[1 : len(part)-1]
-			params = append(params, paramName)
-		}
-	}
-
-	return params
-}
 
 var nonAlphanumericRegex = regexp.MustCompile(`[^a-z0-9]+`)
 
@@ -50,8 +28,6 @@ func slugify(_ *sqlite.FunctionContext, args []driver.Value) (driver.Value, erro
 	result = strings.Trim(result, "-")
 	return result, nil
 }
-
-var ErrEarlyReturn = errors.New("WTFHTTPD_EARLY_RETURN")
 
 func wtfAbort(_ *sqlite.FunctionContext, args []driver.Value) (driver.Value, error) {
 	// Handle different argument counts
@@ -80,30 +56,4 @@ func wtfAbort(_ *sqlite.FunctionContext, args []driver.Value) (driver.Value, err
 		return nil, fmt.Errorf("HTTP_ERROR:%d:%s", code, message)
 	}
 	return nil, fmt.Errorf("wtf_abort supports up to 2 arguments, got %d", len(args))
-}
-
-func registerUdfs() {
-	// Register the slugify function with SQLite
-	err := sqlite.RegisterFunction(
-		"slugify",
-		&sqlite.FunctionImpl{
-			NArgs:         1,
-			Deterministic: true,
-			Scalar:        slugify,
-		},
-	)
-	if err != nil {
-		log.Fatalf("Error registering slugify function: %v", err)
-	}
-	err = sqlite.RegisterFunction(
-		"wtf_abort",
-		&sqlite.FunctionImpl{
-			NArgs:         -1, // variadic - can take 0, 1, 2
-			Deterministic: true,
-			Scalar:        wtfAbort,
-		},
-	)
-	if err != nil {
-		log.Fatalf("Error registering slugify function: %v", err)
-	}
 }

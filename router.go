@@ -90,3 +90,23 @@ func registerGenericRoute(app *App, fileName, dir, relativePath string, mux *htt
 
 	mux.HandleFunc(routePath, createHandler(app, relativePath, pathPatterns))
 }
+
+// extractPathParams extracts path parameters from a URL pattern
+// For example, if the pattern is "/users/{id}/profile",
+// it will return ["id"]
+func extractPathParams(pattern string) []string {
+	patternParts := strings.Split(strings.Trim(pattern, "/"), "/")
+
+	var params []string
+
+	for _, part := range patternParts {
+		// Check if this part is a parameter (enclosed in {})
+		if len(part) > 2 && part[0] == '{' && part[len(part)-1] == '}' {
+			// Extract the parameter name without the braces
+			paramName := part[1 : len(part)-1]
+			params = append(params, paramName)
+		}
+	}
+
+	return params
+}

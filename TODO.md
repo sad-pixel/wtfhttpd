@@ -6,6 +6,7 @@
 [x] Bound variables for path params
 [x] Bound variables for form, query params
 [x] Multiple params binding
+[x] bcrypt functions
 [ ] More context in templates
 [ ] Config files
 [ ] Multiple queries

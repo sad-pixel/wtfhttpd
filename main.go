@@ -7,11 +7,12 @@ import (
 	"time"
 
 	"github.com/nikolalohinski/gonja/v2"
+	"github.com/sad-pixel/wtfhttpd/udfs"
 )
 
 func main() {
 	gonja.DefaultConfig.AutoEscape = true
-	registerUdfs()
+	udfs.RegisterUdfs()
 
 	db, err := sql.Open("sqlite", "./wtf.db")
 	if err != nil {
