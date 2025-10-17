@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"sync/atomic"
 	"time"
+
+	"github.com/nikolalohinski/gonja/v2"
 )
 
 // App holds application-wide dependencies
@@ -17,6 +19,7 @@ type App struct {
 }
 
 func main() {
+	gonja.DefaultConfig.AutoEscape = true
 	registerUdfs()
 
 	db, err := sql.Open("sqlite", "./wtf.db")
