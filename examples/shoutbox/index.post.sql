@@ -2,22 +2,8 @@ INSERT INTO
     shoutbox (name, comment, created_at)
 VALUES
     (
-        (
-            SELECT
-                value
-            FROM
-                request_form
-            WHERE
-                name = 'name'
-        ),
-        (
-            SELECT
-                value
-            FROM
-                request_form
-            WHERE
-                name = 'comment'
-        ),
+        @name,
+        @comment,
         CURRENT_TIMESTAMP
     );
 

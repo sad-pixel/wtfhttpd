@@ -36,6 +36,21 @@ For each request, wtfhttpd creates a set of temporary tables that you can query.
 - `request_meta`: Contains metadata like `method`, `path`, and `remote_addr`.
 - `env_vars`: Contains environment variables from the server process.
 
+## Parameter Binding
+
+Path parameters, form data fields, and query parameters are also provided as named parameters to the SQL files.
+For example, a query param called `name` can be referred to as `@name` in the SQL file, instead of having to write `SELECT value FROM query_params WHERE name = 'name'`
+
+There is special handling for form data and query params that end with `[]`, which are intended for array-like use cases (example: checkboxes).
+wtfhttpd will strip the `[]` and encode a json array, which can be accessed in SQL as `json_each(@id)`, assuming the param was called `id[]`
+
+The order of precedence is Path > Form > Query.
+
+## Early Returning
+
+Routes can terminate early by calling the special function `wtf_abort`.
+An optional http code and message can be passed to it.
+
 ## Response Handling
 
 By default, the result of your final SELECT query is returned as `application/json.`
