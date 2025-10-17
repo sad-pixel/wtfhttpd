@@ -15,6 +15,7 @@ func setupTemporaryTables(tx *sql.Tx) error {
 		`CREATE TEMPORARY TABLE env_vars (name TEXT, value TEXT)`,
 		`CREATE TEMPORARY TABLE request_meta (name TEXT, value TEXT)`,
 		`CREATE TEMPORARY TABLE request_headers (name TEXT, value TEXT)`,
+		`CREATE TEMPORARY TABLE request_form (name TEXT, value TEXT)`,
 		`CREATE TEMPORARY TABLE path_params (name TEXT, value TEXT)`,
 		`CREATE TEMPORARY TABLE response_meta (name TEXT PRIMARY KEY, value TEXT)`,
 	}
@@ -31,7 +32,7 @@ func setupTemporaryTables(tx *sql.Tx) error {
 // populateTemporaryTables fills the temporary tables with request data
 func populateTemporaryTables(tx *sql.Tx, r *http.Request, pathParams []string) error {
 	stmts := make(map[string]*sql.Stmt)
-	tables := []string{"query_params", "request_meta", "request_headers", "env_vars", "path_params"}
+	tables := []string{"query_params", "request_meta", "request_form", "request_headers", "env_vars", "path_params"}
 
 	for _, table := range tables {
 		stmt, err := tx.Prepare(fmt.Sprintf("INSERT INTO %s (name, value) VALUES (?, ?)", table))
@@ -93,6 +94,23 @@ func populateTemporaryTables(tx *sql.Tx, r *http.Request, pathParams []string) e
 		}
 	}
 
+	// Parse form data if content type is application/x-www-form-urlencoded or multipart/form-data
+	if strings.Contains(r.Header.Get("Content-Type"), "application/x-www-form-urlencoded") ||
+		strings.Contains(r.Header.Get("Content-Type"), "multipart/form-data") {
+		if err := r.ParseForm(); err != nil {
+			return fmt.Errorf("Error parsing form data: %v", err)
+		}
+
+		// Insert form values into request_form table
+		for key, values := range r.Form {
+			for _, value := range values {
+				if _, err := stmts["request_form"].Exec(key, value); err != nil {
+					return fmt.Errorf("Error inserting form data: %v", err)
+				}
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -102,6 +120,7 @@ func cleanupTemporaryTables(tx *sql.Tx) error {
 		"query_params",
 		"request_meta",
 		"request_headers",
+		"request_form",
 		"env_vars",
 		"response_meta",
 		"path_params",
