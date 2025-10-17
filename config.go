@@ -8,20 +8,26 @@ import (
 )
 
 type Config struct {
-	Host       string `toml:"host"`
-	Port       int    `toml:"port"`
-	Db         string `toml:"db"`
-	WebRoot    string `toml:"web_root"`
-	LiveReload bool   `toml:"live_reload"`
+	Host          string `toml:"host"`
+	Port          int    `toml:"port"`
+	Db            string `toml:"db"`
+	WebRoot       string `toml:"web_root"`
+	LiveReload    bool   `toml:"live_reload"`
+	EnableAdmin   bool   `toml:"enable_admin"`
+	AdminUsername string `toml:"admin_username"`
+	AdminPassword string `toml:"admin_password"`
 }
 
 func NewConfig() *Config {
 	return &Config{
-		Host:       "127.0.0.1",
-		Port:       8080,
-		Db:         "wtf.db",
-		WebRoot:    "webroot",
-		LiveReload: true,
+		Host:          "127.0.0.1",
+		Port:          8080,
+		Db:            "wtf.db",
+		WebRoot:       "webroot",
+		LiveReload:    true,
+		EnableAdmin:   true,
+		AdminUsername: "wtfhttpd",
+		AdminPassword: "wtfhttpd",
 	}
 }
 

@@ -77,4 +77,45 @@
         </div>
         {% endif %}
     </section>
+
+    <br>
+
+    <section> 
+        {% if tables_list %}
+        <div>
+            The following tables are in the database: 
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Table Name</th>
+                    <th>Row Count</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for table in tables_list %}
+                <tr>
+                    <td>{{ table.name }}</td>
+                    <td>
+                        {% if table.count == -1 %}
+                            <span style="color: #F44336;">Error counting rows</span>
+                        {% else %}
+                            {{ table.count }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="/_wtf?schema={{ table.name }}" class="btn btn-default">Schema</a>
+                        <a href="/_wtf?browse={{ table.name }}" class="btn btn-default">Browse</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            No tables found in the database.
+        </div>
+        {% endif %}
+    </section>
 {% endblock %}

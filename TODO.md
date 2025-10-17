@@ -1,21 +1,44 @@
-[x] Refactor a bit
-[x] Fix the routing bugs
-[x] POST request handling
-[x] Live reloading of routes
-[x] Early Returning
-[x] Bound variables for path params
-[x] Bound variables for form, query params
-[x] Multiple params binding
-[x] bcrypt functions
-[x] Config file support
-[ ] More context in templates
-[ ] Multiple queries
-[ ] Validations
-[ ] Add nice logging
-[ ] Return of the CGI
-[ ] Markdown indexing and rendering
-[ ] Migrations support
-[ ] DuckDB?
-[ ] More UDFs
-[ ] Static File serving
-[ ] Upload Handling
+- [x] Refactor a bit
+- [x] Fix the routing bugs
+- [x] POST request handling
+- [x] Live reloading of routes
+- [x] Early Returning
+- [x] Bound variables for path params
+- [x] Bound variables for form, query params
+- [x] Multiple params binding
+- [x] bcrypt functions
+- [x] Config file support
+- [x] Admin basic auth
+- [x] Schema viewer
+- [x] Data browser
+- [x] SQL console
+- [ ] Migrations system
+- [ ] More Examples
+  - [ ] Link Blog
+  - [ ] Auth
+  - [ ] URL Shortener
+  - [ ] Paste
+- [ ] .env loading
+- [ ] cron jobs (from crons folder)
+- [ ] session auth
+- [ ] persistent kv store (kv_set, kv_get)
+- [ ] cache store (cache_set, cache_get)
+- [ ] background jobs (INSERT INTO background ...)
+- [ ] env var prefix for whitelisting
+- [ ] http client (http_get, http_post etc)
+- [ ] More context in templates (like request, etc)
+- [ ] Multiple queries (each query into a specific context var, currently last select wins)
+- [ ] Validations (using go-playground/validate maybe)
+- [ ] Add nice logging
+- [ ] Make nice TUI
+- [ ] embedded js/lua engine
+- [ ] Return of the CGI (think cgi-bin directory!)
+- [ ] Markdown indexing and rendering
+- [ ] DuckDB?
+- [ ] More UDFs
+- [ ] Static File serving
+- [ ] Upload Handling
+- [ ] incoming email -> sql trigger
+- [ ] rewrite my blog and other services in this
+- [ ] figure out ways to make it more cursed
+- [ ] rebuild the admin using js/lua and sql

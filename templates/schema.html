@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Schema Viewer{% endblock %}
+{% block heading %}WtfHttpd{% endblock %}
+
+{% block content %}
+<section>
+    <header>
+        <h2>Schema for {{ table_name }}</h2>
+        <div>
+            <a href="/_wtf" class="btn btn-default">Back to Admin</a>
+            <a href="/_wtf?browse={{ table_name }}" class="btn btn-default">Browse Data</a>
+        </div>
+    </header>
+    
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Not Null</th>
+                    <th>Default</th>
+                    <th>Primary Key</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for column in columns %}
+                <tr>
+                    <td>{{ column.cid }}</td>
+                    <td>{{ column.name }}</td>
+                    <td>{{ column.type }}</td>
+                    <td>{{ column.not_null }}</td>
+                    <td>{{ column.default }}</td>
+                    <td>{{ column.primary_key }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

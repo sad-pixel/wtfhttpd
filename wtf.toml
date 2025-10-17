@@ -3,3 +3,7 @@ port = 8080
 db = "wtf.db"
 web_root = "webroot"
 live_reload = true
+
+enable_admin = true
+admin_username = "wtfhttpd"
+admin_password = "wtfhttpd"

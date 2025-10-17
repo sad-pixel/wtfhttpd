@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Data Browser - {{ table_name }}{% endblock %}
+
+{% block content %}
+<section>
+    <header>
+        <h2>Data Browser: {{ table_name }}</h2>
+        <div>
+            <a href="/_wtf" class="btn btn-default">Back to Admin</a>
+            <a href="/_wtf?schema={{ table_name }}" class="btn btn-default">View Schema</a>
+        </div>
+    </header>
+    
+    {% if error %}
+    <div class="error-message">
+        <p>Error: {{ error }}</p>
+    </div>
+    {% else %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    {% for column in columns %}
+                    <th>{{ column }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in data %}
+                <tr>
+                    {% for column in columns %}
+                    <td>{{ row[column] }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="pagination">
+        {% if current_page > 1 %}
+        <a href="/_wtf?browse={{ table_name }}&current_page={{ current_page - 1 }}" class="btn btn-default">Previous</a>
+        {% endif %}
+        
+        <span>Page {{ current_page }} of {{ total_pages }}</span>
+        
+        {% if current_page < total_pages %}
+        <a href="/_wtf?browse={{ table_name }}&current_page={{ current_page + 1 }}" class="btn btn-default">Next</a>
+        {% endif %}
+    </div>
+    
+    <div class="row-count">
+        Total rows: {{ total_rows }}
+    </div>
+    {% endif %}
+</section>
+
+
+{% endblock %}
