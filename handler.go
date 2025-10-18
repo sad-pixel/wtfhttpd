@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -92,10 +93,39 @@ func createHandler(app *App, path string, pathParams []string) http.HandlerFunc 
 			}
 		}
 
-		results, err := executeQuery(tx, string(content), varsMap)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+		parsedQueries := ParseQueries(string(content))
+		results := make(map[string][]map[string]any)
+		for _, query := range parsedQueries {
+			// Log all directives and the query
+			log.Printf("Executing query: %s\n", query.Query)
+			if len(query.Directives) > 0 {
+				log.Printf("Query directives: %+v\n", query.Directives)
+			}
+
+			result, err := executeQuery(tx, query.Query, varsMap)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			// Check for store directive
+			storeDirectiveFound := false
+			for _, directive := range query.Directives {
+				if directive.name == "store" && len(directive.params) > 0 {
+					// Store the result under the specified key
+					storeKey := directive.params[0]
+					results[storeKey] = result
+					log.Printf("Stored query result in '%s'", storeKey)
+					storeDirectiveFound = true
+					break
+				}
+			}
+
+			// If no store directive was found, store the result in the "ctx" key
+			if !storeDirectiveFound {
+				results["ctx"] = result
+				log.Printf("No store directive found, stored query result in 'ctx'")
+			}
 		}
 
 		statusCode := http.StatusOK
@@ -161,9 +191,13 @@ func createHandler(app *App, path string, pathParams []string) http.HandlerFunc 
 				return
 			}
 
-			data := exec.NewContext(map[string]interface{}{
-				"ctx": results,
-			})
+			// Convert results to the expected type for exec.NewContext
+			contextData := make(map[string]interface{})
+			for key, value := range results {
+				contextData[key] = value
+			}
+
+			data := exec.NewContext(contextData)
 
 			if err = template.Execute(w, data); err != nil {
 				http.Error(w, "Error rendering template: "+err.Error(), http.StatusInternalServerError)
@@ -172,7 +206,29 @@ func createHandler(app *App, path string, pathParams []string) http.HandlerFunc 
 		} else {
 			// this should probably depend on the content type set into response meta?
 			w.Header().Set("Content-Type", "application/json")
-			if err := json.NewEncoder(w).Encode(results); err != nil {
+
+			// If results only contains ctx, output just that, otherwise output all results
+			var outputData any
+			outputData = results
+			if len(results) == 1 {
+				if ctx, exists := results["ctx"]; exists {
+					outputData = ctx
+				}
+			} else {
+				// Remove "ctx" from the results if it exists
+				if _, exists := results["ctx"]; exists {
+					// Create a copy of results without the "ctx" key
+					filteredResults := make(map[string]interface{})
+					for key, value := range results {
+						if key != "ctx" {
+							filteredResults[key] = value
+						}
+					}
+					outputData = filteredResults
+				}
+			}
+
+			if err := json.NewEncoder(w).Encode(outputData); err != nil {
 				http.Error(w, "Error encoding JSON: "+err.Error(), http.StatusInternalServerError)
 				return
 			}

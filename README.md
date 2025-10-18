@@ -34,7 +34,7 @@ For each request, wtfhttpd creates a set of temporary tables that you can query.
 - `request_headers`: Contains all HTTP request headers.
 - `request_form`: Contains all request form data fields (uploads aren't supported yet!)
 - `request_meta`: Contains metadata like `method`, `path`, and `remote_addr`.
-- `env_vars`: Contains environment variables from the server process.
+- `env_vars`: Contains environment variables from the server process that match the `env_prefix` from config.
 
 ## Parameter Binding
 
@@ -53,7 +53,7 @@ An optional http code and message can be passed to it.
 
 ## Response Handling
 
-By default, the result of your final SELECT query is returned as `application/json.`
+By default, the result of your final query is returned as `application/json.`
 
 To control the response, you can INSERT into the `response_meta` table:
 
@@ -61,9 +61,20 @@ To control the response, you can INSERT into the `response_meta` table:
 - Set a Header: `INSERT INTO response_meta VALUES ('Content-Type', 'text/plain');`
 - Render a Template: `INSERT INTO response_meta VALUES ('wtf-tpl', 'path/to/template.html');`
 
-Templates use jinja2 syntax, and can be anywhere in the webroot.
+## SQL Directives
 
-A built-in status page is available at `/_wtf` to view server statistics like uptime and discovered routes.
+Directives apply at a query level, and are parsed from SQL comments.
+
+The available directives are:
+
+- `@wtf-store <variable_name>`: Using this will put the results of that query into the variable name requested, instead of into `ctx`. This is useful for binding multiple queries to separate things that can be referred to in the templates or JSON responses.
+
+## Templating
+
+Templates use jinja2 syntax (via [Gonja](https://github.com/nikolalohinski/gonja)), and can be anywhere in the webroot.
+
+A default variable called `ctx` is present in the template's context, which will contain the results of the last query.
+Any stored variables created from `@wtf-store` are also available.
 
 ## Additional Functions
 
@@ -77,13 +88,12 @@ The following extra functions are available inside the sql environment:
 
 ## Route introspection
 
-All registered routes are available in the `wtf_routes` table. This is used in the status page, but is also available for sql scripts to query.
+All registered routes are available in the `wtf_routes` table. This is used in the admin interface, but is also available for sql scripts to query.
 
-## Misc Notes
+## Admin Interface
 
-- JSON/XML post bodies are not yet supported
-- Every request runs in it's own transaction, and since sqlite doesn't support nested transactions, you may not use transactions in your sql queries.
-- A `/` is always added to the end of every path. This is may be fixed later.
+An admin interface protected by HTTP Basic auth is available at `/_wtf`.
+The admin interface shows some basic statistics like uptime and hits, registered routes, and has a database schema viewer, data viewer, and SQL query console.
 
 ## Configuration
 
@@ -95,7 +105,19 @@ port = 8080
 db = "wtf.db"
 web_root = "webroot"
 live_reload = true
+enable_admin = true
+admin_username = "wtfhttpd"
+admin_password = "wtfhttpd"
+
+load_dotenv = true
+env_prefix = "WTF_"
 ```
+
+## Misc Notes
+
+- JSON/XML post bodies are not yet supported
+- Every request runs in it's own transaction, and since sqlite doesn't support nested transactions, you may not use transactions in your sql queries.
+- A `/` is always added to the end of every path. This is may be fixed later.
 
 ## License
 

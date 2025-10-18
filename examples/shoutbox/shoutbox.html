@@ -10,13 +10,17 @@
         .container {
             margin-bottom: 2rem;
         }
+
         .info {
             margin-bottom: 1.5rem;
         }
+
         table {
             width: 100%;
         }
-        th, td {
+
+        th,
+        td {
             padding: 0.5rem;
         }
     </style>
@@ -57,7 +61,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for message in ctx %}
+                {% for message in shoutbox_entries %}
                 <tr>
                     <td style="padding: 8px; border-bottom: 1px solid #ddd;">{{ message.name }}</td>
                     <td style="padding: 8px; border-bottom: 1px solid #ddd;">{{ message.comment }}</td>

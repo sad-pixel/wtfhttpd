@@ -5,15 +5,16 @@ CREATE TABLE IF NOT EXISTS shoutbox (
     comment TEXT NOT NULL
 );
 
-INSERT INTO
-    response_meta (name, value)
-VALUES
-    ("status", "200"),
-    ("wtf-tpl", "shoutbox/shoutbox.html");
-
+-- @wtf-store shoutbox_entries
 SELECT
     *
 FROM
     shoutbox
 ORDER BY
     created_at DESC;
+
+INSERT INTO
+    response_meta (name, value)
+VALUES
+    ("status", "200"),
+    ("wtf-tpl", "shoutbox/shoutbox.html");

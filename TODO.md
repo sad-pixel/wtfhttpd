@@ -13,22 +13,22 @@
 - [x] Data browser
 - [x] SQL console
 - [x] fix admin sqlis
+- [x] .env loading
+- [x] env var prefix for whitelisting
+- [x] Multiple queries (each query into a specific context var, currently last select wins)
 - [ ] Migrations system
 - [ ] More Examples
   - [ ] Link Blog
   - [ ] Auth
   - [ ] URL Shortener
   - [ ] Paste
-- [ ] .env loading
 - [ ] cron jobs (from crons folder)
 - [ ] session auth
 - [ ] persistent kv store (kv_set, kv_get)
 - [ ] cache store (cache_set, cache_get)
 - [ ] background jobs (INSERT INTO background ...)
-- [ ] env var prefix for whitelisting
 - [ ] http client (http_get, http_post etc)
 - [ ] More context in templates (like request, etc)
-- [ ] Multiple queries (each query into a specific context var, currently last select wins)
 - [ ] Validations (using go-playground/validate maybe)
 - [ ] Add nice logging
 - [ ] Make nice TUI
