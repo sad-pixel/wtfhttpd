@@ -1,3 +1,5 @@
+-- @wtf-validate name required
+-- @wtf-validate comment required
 INSERT INTO
     shoutbox (name, comment, created_at)
 VALUES

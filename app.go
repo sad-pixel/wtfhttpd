@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
+	"github.com/go-playground/validator/v10"
 )
 
 // App holds application-wide dependencies
@@ -23,6 +24,7 @@ type App struct {
 
 	mu     sync.RWMutex
 	router http.Handler
+	vd     *validator.Validate
 }
 
 func (app *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {

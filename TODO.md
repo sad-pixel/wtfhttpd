@@ -16,6 +16,8 @@
 - [x] .env loading
 - [x] env var prefix for whitelisting
 - [x] Multiple queries (each query into a specific context var, currently last select wins)
+- [x] Validations (using go-playground/validate maybe)
+- [ ] session auth
 - [ ] Migrations system
 - [ ] More Examples
   - [ ] Link Blog
@@ -23,13 +25,12 @@
   - [ ] URL Shortener
   - [ ] Paste
 - [ ] cron jobs (from crons folder)
-- [ ] session auth
+- [ ] More control over what to do when validations fail (redirect back with flash messages?)
 - [ ] persistent kv store (kv_set, kv_get)
 - [ ] cache store (cache_set, cache_get)
 - [ ] background jobs (INSERT INTO background ...)
 - [ ] http client (http_get, http_post etc)
 - [ ] More context in templates (like request, etc)
-- [ ] Validations (using go-playground/validate maybe)
 - [ ] Add nice logging
 - [ ] Make nice TUI
 - [ ] embedded js/lua engine

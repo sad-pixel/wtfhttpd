@@ -95,11 +95,31 @@ func createHandler(app *App, path string, pathParams []string) http.HandlerFunc 
 
 		parsedQueries := ParseQueries(string(content))
 		results := make(map[string][]map[string]any)
+
 		for _, query := range parsedQueries {
-			// Log all directives and the query
-			log.Printf("Executing query: %s\n", query.Query)
+			validations := make(map[string]any)
+
+			log.Printf("Processing query: %s\n", query.Query)
 			if len(query.Directives) > 0 {
 				log.Printf("Query directives: %+v\n", query.Directives)
+			}
+
+			for _, directive := range query.Directives {
+				if directive.name == "validate" && len(directive.params) >= 2 {
+					validations[directive.params[0]] = directive.params[1]
+				}
+			}
+
+			if len(validations) > 0 {
+				errs := app.vd.ValidateMap(varsMap, validations)
+				if len(errs) > 0 {
+					// Validation failed
+					log.Printf("%+v", errs)
+					http.Error(w, fmt.Sprintf("Validation error: %v", errs), http.StatusBadRequest)
+					return
+				}
+
+				log.Printf("Validation passed for fields: %v", validations)
 			}
 
 			result, err := executeQuery(tx, query.Query, varsMap)

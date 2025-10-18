@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
 	"github.com/nikolalohinski/gonja/v2"
 	"github.com/sad-pixel/wtfhttpd/udfs"
@@ -49,6 +50,7 @@ func main() {
 		Config:    config,
 		DB:        db,
 		startedAt: time.Now(),
+		vd:        validator.New(),
 	}
 
 	if err := app.reloadRoutes(); err != nil {

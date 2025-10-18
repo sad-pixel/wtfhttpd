@@ -67,7 +67,13 @@ Directives apply at a query level, and are parsed from SQL comments.
 
 The available directives are:
 
-- `@wtf-store <variable_name>`: Using this will put the results of that query into the variable name requested, instead of into `ctx`. This is useful for binding multiple queries to separate things that can be referred to in the templates or JSON responses.
+- `@wtf-validate <param_name> <validation_rule>`: Used for performing input validation. `param_name` corresponds to the name of a boudn variable, `validation_rule` is a string that specifies one or more rules that are comma separated.
+  - Example: `-- @wtf-validate name required,min=5` will validate that
+    - A named parameter `@name` is present
+    - It has a minimum length of 5
+    - In case the validation fails, a HTTP 400 (Bad Request) will be returned.
+    - Validation rules follow [this syntax](https://github.com/go-playground/validator)
+- `@wtf-store <variable_name>`: Puts the results of that query into the variable name requested, instead of into `ctx`. This is useful for binding multiple queries to separate things that can be referred to in the templates or JSON responses.
 
 ## Templating
 
