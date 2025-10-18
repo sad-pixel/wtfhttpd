@@ -16,6 +16,8 @@ type Config struct {
 	EnableAdmin   bool   `toml:"enable_admin"`
 	AdminUsername string `toml:"admin_username"`
 	AdminPassword string `toml:"admin_password"`
+	LoadDotenv    bool   `toml:"load_dotenv"`
+	EnvPrefix     string `toml:"env_prefix"`
 }
 
 func NewConfig() *Config {
@@ -28,6 +30,8 @@ func NewConfig() *Config {
 		EnableAdmin:   true,
 		AdminUsername: "wtfhttpd",
 		AdminPassword: "wtfhttpd",
+		LoadDotenv:    true,
+		EnvPrefix:     "WTF_",
 	}
 }
 

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/nikolalohinski/gonja/v2"
 	"github.com/sad-pixel/wtfhttpd/udfs"
 )
@@ -34,6 +35,14 @@ func main() {
 	`)
 	if err != nil {
 		log.Fatalf("Error creating wtf_routes table: %v", err)
+	}
+
+	if config.LoadDotenv {
+		log.Println("Loading .env file from webroot/.env")
+		err := godotenv.Load(fmt.Sprintf("%s/.env", config.WebRoot))
+		if err != nil {
+			log.Printf("Warning: Could not load .env file: %v", err)
+		}
 	}
 
 	app := &App{

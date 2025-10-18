@@ -7,3 +7,6 @@ live_reload = true
 enable_admin = true
 admin_username = "wtfhttpd"
 admin_password = "wtfhttpd"
+
+load_dotenv = true
+env_prefix = "WTF_"

@@ -30,7 +30,7 @@ func setupTemporaryTables(tx *sql.Tx) error {
 }
 
 // populateTemporaryTables fills the temporary tables with request data
-func populateTemporaryTables(tx *sql.Tx, r *http.Request, pathParams []string) error {
+func populateTemporaryTables(tx *sql.Tx, r *http.Request, pathParams []string, cfg *Config) error {
 	stmts := make(map[string]*sql.Stmt)
 	tables := []string{"query_params", "request_meta", "request_form", "request_headers", "env_vars", "path_params"}
 
@@ -84,10 +84,10 @@ func populateTemporaryTables(tx *sql.Tx, r *http.Request, pathParams []string) e
 		}
 	}
 
-	// maybe risky but idk
+	// Only load environment variables with the configured prefix
 	for _, envVar := range os.Environ() {
 		parts := strings.SplitN(envVar, "=", 2)
-		if len(parts) == 2 {
+		if len(parts) == 2 && strings.HasPrefix(parts[0], cfg.EnvPrefix) {
 			if _, err := stmts["env_vars"].Exec(parts[0], parts[1]); err != nil {
 				return fmt.Errorf("Error inserting environment variable: %v", err)
 			}

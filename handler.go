@@ -38,7 +38,7 @@ func createHandler(app *App, path string, pathParams []string) http.HandlerFunc 
 			return
 		}
 
-		if err := populateTemporaryTables(tx, r, pathParams); err != nil {
+		if err := populateTemporaryTables(tx, r, pathParams, app.Config); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
