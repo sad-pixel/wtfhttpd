@@ -35,7 +35,9 @@
 
     <div class="container">
         <h2>Post a Message</h2>
+
         <form method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token[0].value }}">
             <div>
                 <label for="name">Name:</label>
                 <input type="text" id="name" name="name" required>

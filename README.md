@@ -94,6 +94,7 @@ The following extra functions are available inside the sql environment:
 - `cache_get(key)` - Fetch a value from the in-memory cache
 - `cache_set(key, value)` - Store a value in the in-memory cache
 - `cache_delete(key)` - Delete a key from the in-memory cache
+- `secure_hex(len)` - Creates a cryptographically secure hex string of the specified length
 
 ## Route introspection
 

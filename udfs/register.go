@@ -24,6 +24,7 @@ func RegisterUdfs(kv *cache.KVCache) {
 		{"cache_set", 2, true, KVSet(kv)},
 		{"cache_get", 1, true, KVGet(kv)},
 		{"cache_delete", 1, true, KVDelete(kv)},
+		{"secure_hex", 1, true, secureHex},
 	}
 
 	for _, fn := range functions {
