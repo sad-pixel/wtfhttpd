@@ -17,6 +17,7 @@
 - [x] env var prefix for whitelisting
 - [x] Multiple queries (each query into a specific context var, currently last select wins)
 - [x] Validations (using go-playground/validate maybe)
+- [x] cache store (cache_set, cache_get)
 - [ ] session auth
 - [ ] Migrations system
 - [ ] More Examples
@@ -27,7 +28,6 @@
 - [ ] cron jobs (from crons folder)
 - [ ] More control over what to do when validations fail (redirect back with flash messages?)
 - [ ] persistent kv store (kv_set, kv_get)
-- [ ] cache store (cache_set, cache_get)
 - [ ] background jobs (INSERT INTO background ...)
 - [ ] http client (http_get, http_post etc)
 - [ ] More context in templates (like request, etc)

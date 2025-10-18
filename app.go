@@ -12,6 +12,7 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/go-playground/validator/v10"
+	"github.com/sad-pixel/wtfhttpd/cache"
 )
 
 // App holds application-wide dependencies
@@ -23,6 +24,7 @@ type App struct {
 	totalRoutes   atomic.Int64
 
 	mu     sync.RWMutex
+	kv     *cache.KVCache
 	router http.Handler
 	vd     *validator.Validate
 }

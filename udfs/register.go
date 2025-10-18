@@ -4,10 +4,11 @@ import (
 	"database/sql/driver"
 	"log"
 
+	"github.com/sad-pixel/wtfhttpd/cache"
 	"modernc.org/sqlite"
 )
 
-func RegisterUdfs() {
+func RegisterUdfs(kv *cache.KVCache) {
 	functions := []struct {
 		name          string
 		nArgs         int32
@@ -20,6 +21,9 @@ func RegisterUdfs() {
 		{"bcrypt_verify", 2, true, bcryptVerify},
 		{"checksum_md5", 1, true, md5Hash},
 		{"checksum_sha1", 1, true, sha1Hash},
+		{"cache_set", 2, true, KVSet(kv)},
+		{"cache_get", 1, true, KVGet(kv)},
+		{"cache_delete", 1, true, KVDelete(kv)},
 	}
 
 	for _, fn := range functions {
@@ -31,6 +35,7 @@ func RegisterUdfs() {
 				Scalar:        fn.scalar,
 			},
 		)
+
 		if err != nil {
 			log.Fatalf("Error registering %s function: %v", fn.name, err)
 		}

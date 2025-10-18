@@ -67,7 +67,7 @@ Directives apply at a query level, and are parsed from SQL comments.
 
 The available directives are:
 
-- `@wtf-validate <param_name> <validation_rule>`: Used for performing input validation. `param_name` corresponds to the name of a boudn variable, `validation_rule` is a string that specifies one or more rules that are comma separated.
+- `@wtf-validate <param_name> <validation_rule>`: Used for performing input validation. `param_name` corresponds to the name of a bound variable, `validation_rule` is a string that specifies one or more rules that are comma separated.
   - Example: `-- @wtf-validate name required,min=5` will validate that
     - A named parameter `@name` is present
     - It has a minimum length of 5
@@ -91,6 +91,9 @@ The following extra functions are available inside the sql environment:
 - `bcrypt_verify(password, hash)` - Verifies bcrypt hashed secrets
 - `checksum_md5(content)` - Creates a md5 checksum (DO NOT USE FOR PASSWORDS)
 - `checksum_sha1(content)` - Creates a sha1 checksum (DO NOT USE FOR PASSWORDS)
+- `cache_get(key)` - Fetch a value from the in-memory cache
+- `cache_set(key, value)` - Store a value in the in-memory cache
+- `cache_delete(key)` - Delete a key from the in-memory cache
 
 ## Route introspection
 

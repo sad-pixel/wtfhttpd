@@ -10,12 +10,14 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
 	"github.com/nikolalohinski/gonja/v2"
+	"github.com/sad-pixel/wtfhttpd/cache"
 	"github.com/sad-pixel/wtfhttpd/udfs"
 )
 
 func main() {
+	kvCache := cache.NewKVCache()
 	gonja.DefaultConfig.AutoEscape = true
-	udfs.RegisterUdfs()
+	udfs.RegisterUdfs(kvCache)
 
 	config := LoadConfig()
 
@@ -50,6 +52,7 @@ func main() {
 		Config:    config,
 		DB:        db,
 		startedAt: time.Now(),
+		kv:        kvCache,
 		vd:        validator.New(),
 	}
 
