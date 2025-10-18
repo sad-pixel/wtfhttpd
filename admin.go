@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
@@ -18,7 +19,6 @@ func (app *App) serveAdmin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check for HTTP Basic Authentication
 	username, password, ok := r.BasicAuth()
 	if !ok {
 		w.Header().Set("WWW-Authenticate", `Basic realm="Admin Access"`)
@@ -26,7 +26,6 @@ func (app *App) serveAdmin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate credentials
 	if username != app.Config.AdminUsername || password != app.Config.AdminPassword {
 		time.Sleep(1 * time.Second) // Prevent brute force attacks
 		w.Header().Set("WWW-Authenticate", `Basic realm="Admin Access"`)
@@ -34,26 +33,20 @@ func (app *App) serveAdmin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set content type
 	w.Header().Set("Content-Type", "text/html")
 
-	// Check if schema query parameter is present
 	schemaParam := r.URL.Query().Get("schema")
 	if schemaParam != "" {
-		// Render schema.html with table schema
 		app.serveSchemaView(w, r, schemaParam)
 		return
 	}
 
-	// Check if browse query parameter is present
 	browseParam := r.URL.Query().Get("browse")
 	if browseParam != "" {
-		// Render data browser for the table
 		app.serveDataBrowser(w, r, browseParam)
 		return
 	}
 
-	// Check if SQL console is requested
 	sqlParam := r.URL.Query().Get("console")
 	if sqlParam == "show" {
 		app.serveSqlConsole(w, r)
@@ -66,7 +59,6 @@ func (app *App) serveAdmin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Serve the main admin page
 	app.serveAdminIndex(w, r)
 }
 
@@ -74,7 +66,6 @@ func (app *App) serveAdminIndex(w http.ResponseWriter, r *http.Request) {
 	uptime := time.Since(app.startedAt).Round(time.Second)
 	startTime := time.Now()
 
-	// Read the template file
 	tpl, err := gonja.FromFile("./templates/index.html")
 	if err != nil {
 		log.Printf("Error loading template: %v", err)
@@ -82,7 +73,6 @@ func (app *App) serveAdminIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Fetch routes from the database
 	routes, err := app.fetchRoutes()
 	if err != nil {
 		log.Printf("Error fetching routes: %v", err)
@@ -90,7 +80,6 @@ func (app *App) serveAdminIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Fetch all tables from the database
 	tables, err := app.fetchTables()
 	if err != nil {
 		log.Printf("Error fetching tables: %v", err)
@@ -100,9 +89,8 @@ func (app *App) serveAdminIndex(w http.ResponseWriter, r *http.Request) {
 
 	renderTime := time.Since(startTime).Milliseconds()
 
-	// Prepare template data with uptime, hits, routes count, and routes list
-	tplData := exec.NewContext(map[string]interface{}{
-		"ctx": map[string]interface{}{
+	tplData := exec.NewContext(map[string]any{
+		"ctx": map[string]any{
 			"uptime": uptime.String(),
 			"hits":   app.hitsProcessed.Load(),
 			"routes": app.totalRoutes.Load(),
@@ -112,7 +100,6 @@ func (app *App) serveAdminIndex(w http.ResponseWriter, r *http.Request) {
 		"render_ms":   renderTime,
 	})
 
-	// Render the template
 	err = tpl.Execute(w, tplData)
 	if err != nil {
 		log.Printf("Error executing template: %v", err)
@@ -121,14 +108,14 @@ func (app *App) serveAdminIndex(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (app *App) fetchRoutes() ([]map[string]interface{}, error) {
+func (app *App) fetchRoutes() ([]map[string]any, error) {
 	rows, err := app.DB.Query("SELECT method, path, file FROM wtf_routes ORDER BY LENGTH(path)")
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var routes []map[string]interface{}
+	var routes []map[string]any
 	for rows.Next() {
 		var method, path, file string
 		if err := rows.Scan(&method, &path, &file); err != nil {
@@ -141,7 +128,7 @@ func (app *App) fetchRoutes() ([]map[string]interface{}, error) {
 			path = path[:len(path)-3]
 		}
 
-		routes = append(routes, map[string]interface{}{
+		routes = append(routes, map[string]any{
 			"method": method,
 			"path":   path,
 			"file":   file,
@@ -150,14 +137,14 @@ func (app *App) fetchRoutes() ([]map[string]interface{}, error) {
 	return routes, nil
 }
 
-func (app *App) fetchTables() ([]map[string]interface{}, error) {
+func (app *App) fetchTables() ([]map[string]any, error) {
 	tableRows, err := app.DB.Query("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")
 	if err != nil {
 		return nil, err
 	}
 	defer tableRows.Close()
 
-	var tables []map[string]interface{}
+	var tables []map[string]any
 	for tableRows.Next() {
 		var tableName string
 		if err := tableRows.Scan(&tableName); err != nil {
@@ -174,7 +161,7 @@ func (app *App) fetchTables() ([]map[string]interface{}, error) {
 			count = -1 // Indicate error in count
 		}
 
-		tables = append(tables, map[string]interface{}{
+		tables = append(tables, map[string]any{
 			"name":  tableName,
 			"count": count,
 		})
@@ -185,7 +172,6 @@ func (app *App) fetchTables() ([]map[string]interface{}, error) {
 func (app *App) serveSchemaView(w http.ResponseWriter, r *http.Request, tableName string) {
 	startTime := time.Now()
 
-	// Read the schema template file
 	tpl, err := gonja.FromFile("./templates/schema.html")
 	if err != nil {
 		log.Printf("Error loading schema template: %v", err)
@@ -193,8 +179,16 @@ func (app *App) serveSchemaView(w http.ResponseWriter, r *http.Request, tableNam
 		return
 	}
 
-	// Query for table schema
-	schemaRows, err := app.DB.Query("PRAGMA table_info(" + tableName + ")")
+	validatedTableName, err := app.validateTableName(tableName)
+	if err != nil {
+		log.Printf("Table validation error: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	tableName = validatedTableName
+
+	// unfortunately we can't parameterize the table name here as it gives a syntax error.
+	schemaRows, err := app.DB.Query(fmt.Sprintf("PRAGMA table_info(%s)", tableName))
 	if err != nil {
 		log.Printf("Error querying schema for table %s: %v", tableName, err)
 		http.Error(w, "Error querying schema: "+err.Error(), http.StatusInternalServerError)
@@ -202,19 +196,19 @@ func (app *App) serveSchemaView(w http.ResponseWriter, r *http.Request, tableNam
 	}
 	defer schemaRows.Close()
 
-	var columns []map[string]interface{}
+	var columns []map[string]any
 	for schemaRows.Next() {
 		var cid int
 		var name, dataType string
 		var notNull, pk int
-		var dfltValue interface{}
+		var dfltValue any
 
 		if err := schemaRows.Scan(&cid, &name, &dataType, &notNull, &dfltValue, &pk); err != nil {
 			log.Printf("Error scanning schema row: %v", err)
 			continue
 		}
 
-		columns = append(columns, map[string]interface{}{
+		columns = append(columns, map[string]any{
 			"cid":         cid,
 			"name":        name,
 			"type":        dataType,
@@ -226,14 +220,12 @@ func (app *App) serveSchemaView(w http.ResponseWriter, r *http.Request, tableNam
 
 	renderTime := time.Since(startTime).Milliseconds()
 
-	// Prepare template data
-	tplData := exec.NewContext(map[string]interface{}{
+	tplData := exec.NewContext(map[string]any{
 		"table_name": tableName,
 		"columns":    columns,
 		"render_ms":  renderTime,
 	})
 
-	// Render the template
 	err = tpl.Execute(w, tplData)
 	if err != nil {
 		log.Printf("Error executing schema template: %v", err)
@@ -242,10 +234,61 @@ func (app *App) serveSchemaView(w http.ResponseWriter, r *http.Request, tableNam
 	}
 }
 
+// Validate that the requested table exists
+func (app *App) validateTableName(tableName string) (string, error) {
+	tableRows, err := app.DB.Query("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")
+	if err != nil {
+		return "", fmt.Errorf("error querying tables: %v", err)
+	}
+	defer tableRows.Close()
+
+	var tables []string
+	for tableRows.Next() {
+		var name string
+		if err := tableRows.Scan(&name); err != nil {
+			log.Printf("Error scanning table name: %v", err)
+			continue
+		}
+		tables = append(tables, name)
+	}
+
+	tableExists := false
+	validTableName := tableName
+	for _, name := range tables {
+		if strings.EqualFold(name, tableName) {
+			// Use the actual table name from the database for subsequent queries
+			validTableName = name
+			tableExists = true
+			break
+		}
+	}
+
+	if !tableExists {
+		return "", fmt.Errorf("table '%s' not found", tableName)
+	}
+
+	// Validate that the table name contains only alphanumeric characters and underscores
+	// This is required to prevent 2nd order SQL injection
+	if matched, err := regexp.MatchString("^[a-zA-Z0-9_]+$", validTableName); err != nil {
+		return "", fmt.Errorf("error validating table name: %v", err)
+	} else if !matched {
+		return "", fmt.Errorf("invalid table name: '%s' contains characters other than letters, numbers, and underscores", validTableName)
+	}
+
+	return validTableName, nil
+}
+
 func (app *App) serveDataBrowser(w http.ResponseWriter, r *http.Request, tableName string) {
 	startTime := time.Now()
 
-	// Read the data browser template file
+	validatedTableName, err := app.validateTableName(tableName)
+	if err != nil {
+		log.Printf("Table validation error: %v", err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	tableName = validatedTableName
+
 	tpl, err := gonja.FromFile("./templates/data_browser.html")
 	if err != nil {
 		log.Printf("Error loading data browser template: %v", err)
@@ -253,7 +296,6 @@ func (app *App) serveDataBrowser(w http.ResponseWriter, r *http.Request, tableNa
 		return
 	}
 
-	// Get page parameter for pagination
 	page := 1
 	if pageParam := r.URL.Query().Get("page"); pageParam != "" {
 		fmt.Sscanf(pageParam, "%d", &page)
@@ -262,11 +304,9 @@ func (app *App) serveDataBrowser(w http.ResponseWriter, r *http.Request, tableNa
 		}
 	}
 
-	// Set page size
 	pageSize := 50
 	offset := (page - 1) * pageSize
 
-	// Get column names
 	columns, err := app.getTableColumns(tableName)
 	if err != nil {
 		log.Printf("Error getting columns for table %s: %v", tableName, err)
@@ -274,9 +314,8 @@ func (app *App) serveDataBrowser(w http.ResponseWriter, r *http.Request, tableNa
 		return
 	}
 
-	// Query for table data with pagination
-	query := fmt.Sprintf("SELECT * FROM %s LIMIT %d OFFSET %d", tableName, pageSize, offset)
-	rows, err := app.DB.Query(query)
+	query := fmt.Sprintf("SELECT * FROM %s LIMIT ? OFFSET ?", tableName)
+	rows, err := app.DB.Query(query, pageSize, offset)
 	if err != nil {
 		log.Printf("Error querying data for table %s: %v", tableName, err)
 		http.Error(w, "Error querying table data: "+err.Error(), http.StatusInternalServerError)
@@ -284,7 +323,6 @@ func (app *App) serveDataBrowser(w http.ResponseWriter, r *http.Request, tableNa
 	}
 	defer rows.Close()
 
-	// Get total row count for pagination
 	var totalRows int
 	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM %s", tableName)
 	err = app.DB.QueryRow(countQuery).Scan(&totalRows)
@@ -293,44 +331,36 @@ func (app *App) serveDataBrowser(w http.ResponseWriter, r *http.Request, tableNa
 		totalRows = 0
 	}
 
-	// Calculate total pages
 	totalPages := (totalRows + pageSize - 1) / pageSize
 	if totalPages == 0 {
 		totalPages = 1
 	}
 
-	// Process the rows into a slice of maps
-	var data []map[string]interface{}
+	var data []map[string]any
 	for rows.Next() {
-		// Create a slice of interface{} to hold the values
-		values := make([]interface{}, len(columns))
-		valuePtrs := make([]interface{}, len(columns))
+		values := make([]any, len(columns))
+		valuePtrs := make([]any, len(columns))
 
-		// Set up pointers to each interface{}
 		for i := range values {
 			valuePtrs[i] = &values[i]
 		}
 
-		// Scan the row into the slice of interface{}
 		if err := rows.Scan(valuePtrs...); err != nil {
 			log.Printf("Error scanning row: %v", err)
 			continue
 		}
 
-		// Create a map for this row
-		rowMap := make(map[string]interface{})
+		rowMap := make(map[string]any)
 		for i, col := range columns {
-			var v interface{}
+			var v any
 			val := values[i]
 
-			// Handle null values
 			if val == nil {
 				v = nil
 			} else {
-				// Try to convert to string for display
-				switch val.(type) {
+				switch val := val.(type) {
 				case []byte:
-					v = string(val.([]byte))
+					v = string(val)
 				default:
 					v = val
 				}
@@ -342,8 +372,7 @@ func (app *App) serveDataBrowser(w http.ResponseWriter, r *http.Request, tableNa
 
 	renderTime := time.Since(startTime).Milliseconds()
 
-	// Prepare template data
-	tplData := exec.NewContext(map[string]interface{}{
+	tplData := exec.NewContext(map[string]any{
 		"table_name":   tableName,
 		"columns":      columns,
 		"data":         data,
@@ -353,7 +382,6 @@ func (app *App) serveDataBrowser(w http.ResponseWriter, r *http.Request, tableNa
 		"render_ms":    renderTime,
 	})
 
-	// Render the template
 	err = tpl.Execute(w, tplData)
 	if err != nil {
 		log.Printf("Error executing data browser template: %v", err)
@@ -363,9 +391,10 @@ func (app *App) serveDataBrowser(w http.ResponseWriter, r *http.Request, tableNa
 }
 
 func (app *App) getTableColumns(tableName string) ([]string, error) {
-	// Query for table schema
-	schemaRows, err := app.DB.Query("PRAGMA table_info(" + tableName + ")")
+	// unfortunately we can't parameterize the table name here as it gives a syntax error.
+	schemaRows, err := app.DB.Query(fmt.Sprintf("PRAGMA table_info(%s)", tableName))
 	if err != nil {
+		log.Println("here")
 		return nil, err
 	}
 	defer schemaRows.Close()
@@ -375,7 +404,7 @@ func (app *App) getTableColumns(tableName string) ([]string, error) {
 		var cid int
 		var name, dataType string
 		var notNull, pk int
-		var dfltValue interface{}
+		var dfltValue any
 
 		if err := schemaRows.Scan(&cid, &name, &dataType, &notNull, &dfltValue, &pk); err != nil {
 			log.Printf("Error scanning schema row: %v", err)
@@ -390,7 +419,6 @@ func (app *App) getTableColumns(tableName string) ([]string, error) {
 func (app *App) serveSqlConsole(w http.ResponseWriter, r *http.Request) {
 	startTime := time.Now()
 
-	// Read the SQL console template file
 	tpl, err := gonja.FromFile("./templates/sql_console.html")
 	if err != nil {
 		log.Printf("Error loading SQL console template: %v", err)
@@ -398,7 +426,6 @@ func (app *App) serveSqlConsole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get list of tables for autocomplete
 	tables, err := app.fetchTables()
 	if err != nil {
 		log.Printf("Error fetching tables: %v", err)
@@ -408,13 +435,11 @@ func (app *App) serveSqlConsole(w http.ResponseWriter, r *http.Request) {
 
 	renderTime := time.Since(startTime).Milliseconds()
 
-	// Prepare template data
-	tplData := exec.NewContext(map[string]interface{}{
+	tplData := exec.NewContext(map[string]any{
 		"tables":    tables,
 		"render_ms": renderTime,
 	})
 
-	// Render the template
 	err = tpl.Execute(w, tplData)
 	if err != nil {
 		log.Printf("Error executing SQL console template: %v", err)
@@ -424,7 +449,6 @@ func (app *App) serveSqlConsole(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) executeSQL(w http.ResponseWriter, r *http.Request) {
-	// Parse the SQL query from the request
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "Error parsing form: "+err.Error(), http.StatusBadRequest)
 		return
@@ -436,59 +460,49 @@ func (app *App) executeSQL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set response content type to JSON
 	w.Header().Set("Content-Type", "application/json")
 
-	// Determine if this is a SELECT query or a modification query
 	isSelect := strings.HasPrefix(strings.ToUpper(strings.TrimSpace(query)), "SELECT")
 
 	if isSelect {
-		// Execute SELECT query
 		rows, err := app.DB.Query(query)
 		if err != nil {
-			json.NewEncoder(w).Encode(map[string]interface{}{
+			json.NewEncoder(w).Encode(map[string]any{
 				"error": err.Error(),
 			})
 			return
 		}
 		defer rows.Close()
 
-		// Get column names
 		columns, err := rows.Columns()
 		if err != nil {
-			json.NewEncoder(w).Encode(map[string]interface{}{
+			json.NewEncoder(w).Encode(map[string]any{
 				"error": "Error getting column names: " + err.Error(),
 			})
 			return
 		}
 
-		// Process the rows into a slice of maps
-		var results []map[string]interface{}
+		var results []map[string]any
 		for rows.Next() {
-			// Create a slice of interface{} to hold the values
-			values := make([]interface{}, len(columns))
-			valuePtrs := make([]interface{}, len(columns))
+			values := make([]any, len(columns))
+			valuePtrs := make([]any, len(columns))
 
-			// Set up pointers to each interface{}
 			for i := range values {
 				valuePtrs[i] = &values[i]
 			}
 
-			// Scan the row into the slice of interface{}
 			if err := rows.Scan(valuePtrs...); err != nil {
-				json.NewEncoder(w).Encode(map[string]interface{}{
+				json.NewEncoder(w).Encode(map[string]any{
 					"error": "Error scanning row: " + err.Error(),
 				})
 				return
 			}
 
-			// Create a map for this row
-			rowMap := make(map[string]interface{})
+			rowMap := make(map[string]any)
 			for i, col := range columns {
-				var v interface{}
+				var v any
 				val := values[i]
 
-				// Convert byte slices to strings for JSON compatibility
 				if b, ok := val.([]byte); ok {
 					v = string(b)
 				} else {
@@ -501,44 +515,38 @@ func (app *App) executeSQL(w http.ResponseWriter, r *http.Request) {
 			results = append(results, rowMap)
 		}
 
-		// Check for errors after iterating through rows
 		if err := rows.Err(); err != nil {
-			json.NewEncoder(w).Encode(map[string]interface{}{
+			json.NewEncoder(w).Encode(map[string]any{
 				"error": "Error iterating rows: " + err.Error(),
 			})
 			return
 		}
 
-		// Return the results as JSON
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		json.NewEncoder(w).Encode(map[string]any{
 			"columns": columns,
 			"rows":    results,
 			"count":   len(results),
 		})
 	} else {
-		// Execute modification query (INSERT, UPDATE, DELETE, etc.)
 		result, err := app.DB.Exec(query)
 		if err != nil {
-			json.NewEncoder(w).Encode(map[string]interface{}{
+			json.NewEncoder(w).Encode(map[string]any{
 				"error": err.Error(),
 			})
 			return
 		}
 
-		// Get affected rows
 		rowsAffected, err := result.RowsAffected()
 		if err != nil {
-			json.NewEncoder(w).Encode(map[string]interface{}{
+			json.NewEncoder(w).Encode(map[string]any{
 				"error": "Error getting affected rows: " + err.Error(),
 			})
 			return
 		}
 
-		// Get last insert ID (if applicable)
 		lastInsertID, err := result.LastInsertId()
 
-		// Return the result as JSON
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		json.NewEncoder(w).Encode(map[string]any{
 			"rowsAffected": rowsAffected,
 			"lastInsertId": lastInsertID,
 		})

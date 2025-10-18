@@ -12,6 +12,7 @@
 - [x] Schema viewer
 - [x] Data browser
 - [x] SQL console
+- [x] fix admin sqlis
 - [ ] Migrations system
 - [ ] More Examples
   - [ ] Link Blog
@@ -39,6 +40,6 @@
 - [ ] Static File serving
 - [ ] Upload Handling
 - [ ] incoming email -> sql trigger
+- [ ] rebuild the admin using js/lua and sql
 - [ ] rewrite my blog and other services in this
 - [ ] figure out ways to make it more cursed
-- [ ] rebuild the admin using js/lua and sql
