@@ -13,18 +13,10 @@ FROM
 ORDER BY
     created_at DESC;
 
-INSERT INTO
-    response_meta (name, value)
-VALUES
-    ("secure_token", secure_hex(64));
-
 -- @wtf-store csrf_token
+-- @wtf-capture csrf single
 SELECT
-    value
-FROM
-    response_meta
-WHERE
-    name = "secure_token";
+    secure_hex(64) as token;
 
 INSERT INTO
     response_meta (name, value)
@@ -33,12 +25,5 @@ VALUES
     ("wtf-tpl", "shoutbox/shoutbox.html"),
     (
         "Set-Cookie",
-        "csrf_token=" || (
-            SELECT
-                value
-            FROM
-                response_meta
-            WHERE
-                name = "secure_token"
-        )
+        "csrf_token=" || @csrf
     );

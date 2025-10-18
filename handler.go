@@ -146,6 +146,30 @@ func createHandler(app *App, path string, pathParams []string) http.HandlerFunc 
 				results["ctx"] = result
 				log.Printf("No store directive found, stored query result in 'ctx'")
 			}
+
+			for _, directive := range query.Directives {
+				if directive.name == "capture" && len(directive.params) > 0 {
+					varName := directive.params[0]
+					isScalar := false
+					if len(directive.params) == 2 && directive.params[1] == "single" {
+						isScalar = true
+					}
+
+					if isScalar && len(result) > 0 {
+						// For scalar, get the first value of the first row
+						for _, val := range result[0] {
+							varsMap[varName] = val
+							break
+						}
+					} else {
+						// Otherwise store the entire result set as JSON
+						jsonData, err := json.Marshal(result)
+						if err == nil {
+							varsMap[varName] = string(jsonData)
+						}
+					}
+				}
+			}
 		}
 
 		statusCode := http.StatusOK

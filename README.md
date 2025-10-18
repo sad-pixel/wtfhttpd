@@ -74,6 +74,7 @@ The available directives are:
     - In case the validation fails, a HTTP 400 (Bad Request) will be returned.
     - Validation rules follow [this syntax](https://github.com/go-playground/validator)
 - `@wtf-store <variable_name>`: Puts the results of that query into the variable name requested, instead of into `ctx`. This is useful for binding multiple queries to separate things that can be referred to in the templates or JSON responses.
+- `@wtf-capture <variable name> [single]`: Puts the result of the query into a named parameter with the variable name requested. This is useful for referring to the value in later queries. If "single" is provided as the second argument, the result named parameter is bound as a scalar. If the second argument is not single or not provided, the named parameter is bound as a json encoded string of the query results.
 
 ## Templating
 
