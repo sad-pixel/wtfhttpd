@@ -187,6 +187,48 @@ The following extra functions are available inside the sql environment:
 - `secure_hex(len)` - Creates a cryptographically secure hex string of the specified length
 - `build_query(json_object)` - Converts a JSON object to a URL query string
 - `parse_query(query_string)` - Converts a URL query string to a JSON object
+- `http_get(url, [headers_json])` - Makes a GET request to the specified URL
+- `http_post(url, [headers_json], [body])` - Makes a POST request to the specified URL
+- `http_put(url, [headers_json], [body])` - Makes a PUT request to the specified URL
+- `http_patch(url, [headers_json], [body])` - Makes a PATCH request to the specified URL
+- `http_delete(url, [headers_json])` - Makes a DELETE request to the specified URL
+
+## HTTP Client
+
+The following functions are available for use in SQL:
+
+- `http_get(url, [headers_json])`
+- `http_post(url, [headers_json], [body])`
+- `http_put(url, [headers_json], [body])`
+- `http_patch(url, [headers_json], [body])`
+- `http_delete(url, [headers_json])`
+
+Function Arguments:
+
+- `url (TEXT)`: The full URL to request.
+- `headers_json (TEXT, Optional)`: A JSON string representing the headers to send. Example: `'{"Authorization": "Bearer ...", "Accept": "application/json"}'`.
+- `body (TEXT, Optional)`: The request body for POST, PUT, and PATCH.
+
+All these functions return a single TEXT value: a JSON string containing the entire response.
+You can parse the details you need using SQLite's built-in json_extract function.
+
+The returned JSON has the following schema:
+
+```json
+{
+  "status_code": 200,
+  "status": "200 OK",
+  "headers": {
+    "Content-Type": ["application/json; charset=utf-8"],
+    "Content-Length": ["1234"],
+    "X-RateLimit-Remaining": ["4999"]
+  },
+  "body": "{\"login\":\"octocat\",\"id\":1,\"name\":\"The Octocat\"...}",
+  "error": null
+}
+```
+
+If a network error occurs (e.g., DNS failure, timeout), the body would be null and the error field would contain the error message.
 
 ## Route introspection
 

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WTF SQL</title>
+    <link rel="stylesheet" href="https://unpkg.com/sakura.css/css/sakura.css" type="text/css">
+    <style>
+        .container {
+            margin-bottom: 2rem;
+        }
+
+        .info {
+            margin-bottom: 1.5rem;
+        }
+
+        table {
+            width: 100%;
+        }
+
+        th,
+        td {
+            padding: 0.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>WTF Github</h1>
+
+    <div class="info">
+        <p>This is a simple SQL-powered web application.</p>
+    </div>
+
+    <div class="container">
+        <h2>Find a GitHub user</h2>
+
+        <form method="post">
+            <div>
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div style="margin-top: 10px;">
+                <button type="submit">Submit</button>
+            </div>
+        </form>
+    </div>
+
+    {% if user_data %}
+    <div class="container">
+        <h2>GitHub User Details</h2>
+        <div class="user-profile" style="display: flex; flex-wrap: wrap; gap: 2rem; align-items: flex-start;">
+            <div style="flex: 0 0 auto;">
+                {% if user_data[0].avatar_url %}
+                <div style="margin-bottom: 1rem;">
+                    <img src="{{ user_data[0].avatar_url }}" alt="Profile picture" style="max-width: 150px; border-radius: 50%;">
+                </div>
+                {% endif %}
+                
+                <div style="display: inline-block; padding: 0.3rem 0.6rem; border-radius: 0.3rem; font-size: 0.8rem; 
+                            {% if user_data[0].cache_status == 'HIT' %}
+                            background-color: #4CAF50; color: white;
+                            {% else %}
+                            background-color: #2196F3; color: white;
+                            {% endif %}">
+                    Cache: {{ user_data[0].cache_status }}
+                </div>
+            </div>
+            
+            <div style="flex: 1;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tbody>
+                        {% if user_data[0].name %}
+                        <tr>
+                            <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Name</th>
+                            <td style="padding: 8px; border-bottom: 1px solid #ddd;">{{ user_data[0].name }}</td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Username</th>
+                            <td style="padding: 8px; border-bottom: 1px solid #ddd;">{{ user_data[0].username }}</td>
+                        </tr>
+                        {% if user_data[0].location %}
+                        <tr>
+                            <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Location</th>
+                            <td style="padding: 8px; border-bottom: 1px solid #ddd;">{{ user_data[0].location }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if user_data[0].bio %}
+                        <tr>
+                            <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Bio</th>
+                            <td style="padding: 8px; border-bottom: 1px solid #ddd;">{{ user_data[0].bio }}</td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Followers</th>
+                            <td style="padding: 8px; border-bottom: 1px solid #ddd;">{{ user_data[0].followers }}</td>
+                        </tr>
+                        <tr>
+                            <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Following</th>
+                            <td style="padding: 8px; border-bottom: 1px solid #ddd;">{{ user_data[0].following }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</body>
+
+</html>
