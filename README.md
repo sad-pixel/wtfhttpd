@@ -2,6 +2,8 @@
 
 The HTTP server that makes you go _wtf_!
 
+![Logo](logo.jpg)
+
 ---
 
 > This is obviously not production ready, nor is it complete, though the features described here do work.

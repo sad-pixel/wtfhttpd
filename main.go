@@ -14,7 +14,20 @@ import (
 	"github.com/sad-pixel/wtfhttpd/udfs"
 )
 
+var logo = "\n" +
+	"               .oOo  o                           o \n" +
+	"               O    O                           O  \n" +
+	"           O   o    o       O     O             o  \n" +
+	"          oOo  OoO  O      oOo   oOo            o  \n" +
+	"'o     O   o   o    OoOo.   o     o   .oOo. .oOoO  \n" +
+	" O  o  o   O   O    o   o   O     O   O   o o   O  \n" +
+	" o  O  O   o   o    o   O   o     o   o   O O   o  \n" +
+	" `Oo'oO'   `oO O'   O   o   `oO   `oO oOoO' `OoO'o \n" +
+	"                                      O            \n" +
+	"                                      o'           \n"
+
 func main() {
+	fmt.Println(logo)
 	kvCache := cache.NewKVCache()
 	gonja.DefaultConfig.AutoEscape = true
 	udfs.RegisterUdfs(kvCache)
