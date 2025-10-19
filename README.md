@@ -40,7 +40,7 @@ For each request, wtfhttpd creates a set of temporary tables that you can query.
 - `request_meta`: Contains metadata like `method`, `path`, and `remote_addr`.
 - `env_vars`: Contains environment variables from the server process that match the `env_prefix` from config.
 - `request_cookies`: Contains all cookies sent in the request headers.
-- `request_json`: Contains the flattened key-value representation of a JSON request body. This table is only created for `POST`, `PUT`, or `PATCH` requests with a `Content-Type: application/json` header.
+- `request_json`: Contains the flattened key-value representation of a JSON request body. This table is only populated for requests with a `Content-Type: application/json` header.
 
 The `request_json` table has the following schema:
 
@@ -185,6 +185,8 @@ The following extra functions are available inside the sql environment:
 - `cache_set(key, value)` - Store a value in the in-memory cache
 - `cache_delete(key)` - Delete a key from the in-memory cache
 - `secure_hex(len)` - Creates a cryptographically secure hex string of the specified length
+- `build_query(json_object)` - Converts a JSON object to a URL query string
+- `parse_query(query_string)` - Converts a URL query string to a JSON object
 
 ## Route introspection
 
