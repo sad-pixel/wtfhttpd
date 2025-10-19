@@ -102,10 +102,6 @@ To control the response, you can INSERT into the `response_meta` table:
 - Set a Header: `INSERT INTO response_meta VALUES ('Content-Type', 'text/plain');`
 - Render a Template: `INSERT INTO response_meta VALUES ('wtf-tpl', 'path/to/template.html');`
 
-Of course. Here is the README section for cookie handling, written in the distinctive voice of `wtfhttpd`.
-
----
-
 ## Cookie Handling
 
 ### Reading Incoming Cookies

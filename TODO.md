@@ -22,7 +22,7 @@
 - [x] JSON parsing
 - [x] cookies temp table
 - [x] query param udfs
-- [ ] http client (http_get, http_post etc)
+- [x] http client (http_get, http_post etc)
 - [ ] improve wtf_abort implementation
 - [ ] session auth
 - [ ] Migrations system
@@ -31,6 +31,7 @@
   - [ ] Auth
   - [ ] URL Shortener
   - [ ] Paste
+  - [x] External API example
 - [ ] cron jobs (from crons folder)
 - [ ] More control over what to do when validations fail (redirect back with flash messages?)
 - [ ] persistent kv store (kv_set, kv_get)
