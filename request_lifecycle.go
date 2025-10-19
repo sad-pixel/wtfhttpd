@@ -2,7 +2,9 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -18,6 +20,7 @@ func setupTemporaryTables(tx *sql.Tx) error {
 		`CREATE TEMPORARY TABLE request_form (name TEXT, value TEXT)`,
 		`CREATE TEMPORARY TABLE path_params (name TEXT, value TEXT)`,
 		`CREATE TEMPORARY TABLE response_meta (name TEXT PRIMARY KEY, value TEXT)`,
+		`CREATE TEMPORARY TABLE request_json (path TEXT PRIMARY KEY NOT NULL, value ANY, type TEXT NOT NULL, json TEXT)`,
 	}
 
 	for _, table := range tables {
@@ -42,6 +45,13 @@ func populateTemporaryTables(tx *sql.Tx, r *http.Request, pathParams []string, c
 		defer stmt.Close()
 		stmts[table] = stmt
 	}
+
+	stmt, err := tx.Prepare("INSERT INTO request_json (path, value, type, json) VALUES (?, ?, ?, ?)")
+	if err != nil {
+		return fmt.Errorf("Error preparing statement for request_json: %w", err)
+	}
+	defer stmt.Close()
+	stmts["request_json"] = stmt
 
 	for key, values := range r.URL.Query() {
 		for _, value := range values {
@@ -111,6 +121,30 @@ func populateTemporaryTables(tx *sql.Tx, r *http.Request, pathParams []string, c
 		}
 	}
 
+	if strings.Contains(r.Header.Get("Content-Type"), "application/json") &&
+		r.ContentLength != 0 {
+		var data any
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			return fmt.Errorf("Error reading request body: %w", err)
+		}
+
+		if err := json.Unmarshal(body, &data); err != nil {
+			return fmt.Errorf("Error parsing JSON: %w", err)
+		}
+
+		rows := make([]JsonRow, 0)
+		flattenJson("$", data, &rows)
+		if len(rows) != 0 {
+			for _, row := range rows {
+				_, err := stmt.Exec(row.Path, row.Value, row.Type, row.Json)
+				if err != nil {
+					return fmt.Errorf("Error inserting row into request_json (%s): %w", row.Path, err)
+				}
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -124,6 +158,7 @@ func cleanupTemporaryTables(tx *sql.Tx) error {
 		"env_vars",
 		"response_meta",
 		"path_params",
+		"request_json",
 	}
 
 	for _, table := range tables {

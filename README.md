@@ -10,6 +10,8 @@ The HTTP server that makes you go _wtf_!
 
 It uses file-based routing to map HTTP requests directly to .sql files, executes them against a SQLite database, and renders the results as either JSON or HTML via templates.
 
+In other words, it treats HTTP communication as a database transaction: you read the state of the world from a set of input tables and write your intended changes to an output table.
+
 ## File Based Routing
 
 Routes are determined by the filesystem layout within the webroot directory.
@@ -35,6 +37,42 @@ For each request, wtfhttpd creates a set of temporary tables that you can query.
 - `request_form`: Contains all request form data fields (uploads aren't supported yet!)
 - `request_meta`: Contains metadata like `method`, `path`, and `remote_addr`.
 - `env_vars`: Contains environment variables from the server process that match the `env_prefix` from config.
+- `request_json`: Contains the flattened key-value representation of a JSON request body. This table is only created for `POST`, `PUT`, or `PATCH` requests with a `Content-Type: application/json` header.
+
+The `request_json` table has the following schema:
+
+| Column  | Type | Description                                                                                                                                                                                                    |
+| :------ | :--- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `path`  | TEXT | A JSONPath-like string representing the unique key for a value. e.g., `$.user.name` or `$.tags[0]`.                                                                                                            |
+| `value` | ANY  | The primitive value of the key. For objects and arrays, this will be a string like `[object]` or `[array]`.                                                                                                    |
+| `type`  | TEXT | The original JSON type: `object`, `array`, `string`, `number`, `boolean`, or `null`.                                                                                                                           |
+| `json`  | TEXT | If the value is an object or array, this column contains the raw JSON string of that sub-tree, allowing you to use SQLite's built-in `json_extract` functions on nested data. For other types, this is `NULL`. |
+
+## JSON Request Body Parsing
+
+`wtfhttpd` automatically parses JSON request bodies for requests that have a `Content-Type` header of `application/json`.
+
+The parsed JSON is flattened and inserted into a temporary table called `request_json`.
+
+For example, given this incoming JSON body:
+
+```json
+{
+  "name": "Alice",
+  "email": "alice@example.com",
+  "tags": ["user", "beta"],
+  "settings": {
+    "theme": "dark"
+  }
+}
+```
+
+You could extract the user's name with the following query:
+
+```sql
+SELECT value FROM request_json WHERE path = '$.name';
+-- Result: 'Alice'
+```
 
 ## Parameter Binding
 
@@ -126,7 +164,6 @@ env_prefix = "WTF_"
 
 ## Misc Notes
 
-- JSON/XML post bodies are not yet supported
 - Every request runs in it's own transaction, and since sqlite doesn't support nested transactions, you may not use transactions in your sql queries.
 - A `/` is always added to the end of every path. This is may be fixed later.
 

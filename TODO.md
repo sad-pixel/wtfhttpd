@@ -18,6 +18,9 @@
 - [x] Multiple queries (each query into a specific context var, currently last select wins)
 - [x] Validations (using go-playground/validate maybe)
 - [x] cache store (cache_set, cache_get)
+- [x] capture directive (variables)
+- [x] JSON parsing
+- [ ] cookies temp table
 - [ ] session auth
 - [ ] Migrations system
 - [ ] More Examples
