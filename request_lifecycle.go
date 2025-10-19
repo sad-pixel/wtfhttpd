@@ -19,8 +19,22 @@ func setupTemporaryTables(tx *sql.Tx) error {
 		`CREATE TEMPORARY TABLE request_headers (name TEXT, value TEXT)`,
 		`CREATE TEMPORARY TABLE request_form (name TEXT, value TEXT)`,
 		`CREATE TEMPORARY TABLE path_params (name TEXT, value TEXT)`,
-		`CREATE TEMPORARY TABLE response_meta (name TEXT PRIMARY KEY, value TEXT)`,
+		`CREATE TEMPORARY TABLE request_cookies (name TEXT, value TEXT)`,
 		`CREATE TEMPORARY TABLE request_json (path TEXT PRIMARY KEY NOT NULL, value ANY, type TEXT NOT NULL, json TEXT)`,
+
+		// "Magic Tables" for the response
+		`CREATE TEMPORARY TABLE response_meta (name TEXT PRIMARY KEY, value TEXT)`,
+		`CREATE TEMPORARY TABLE response_cookies (
+			name TEXT NOT NULL,
+			value TEXT NOT NULL,
+			max_age INTEGER DEFAULT NULL,
+			expires TIMESTAMP DEFAULT NULL,
+			path TEXT DEFAULT '/',
+			domain TEXT DEFAULT '',
+			secure INTEGER DEFAULT 0,
+			http_only INTEGER DEFAULT 1,
+			same_site TEXT DEFAULT 'Lax' CHECK(same_site IN ('Strict', 'Lax', 'None'))
+		)`,
 	}
 
 	for _, table := range tables {
@@ -35,7 +49,11 @@ func setupTemporaryTables(tx *sql.Tx) error {
 // populateTemporaryTables fills the temporary tables with request data
 func populateTemporaryTables(tx *sql.Tx, r *http.Request, pathParams []string, cfg *Config) error {
 	stmts := make(map[string]*sql.Stmt)
-	tables := []string{"query_params", "request_meta", "request_form", "request_headers", "env_vars", "path_params"}
+	tables := []string{
+		"query_params", "request_meta", "request_form",
+		"request_headers", "env_vars", "path_params",
+		"request_cookies",
+	}
 
 	for _, table := range tables {
 		stmt, err := tx.Prepare(fmt.Sprintf("INSERT INTO %s (name, value) VALUES (?, ?)", table))
@@ -72,6 +90,12 @@ func populateTemporaryTables(tx *sql.Tx, r *http.Request, pathParams []string, c
 	for _, param := range pathParams {
 		if _, err := stmts["path_params"].Exec(param, r.PathValue(param)); err != nil {
 			return fmt.Errorf("Error inserting path params: %v", err)
+		}
+	}
+
+	for _, cookie := range r.Cookies() {
+		if _, err := stmts["request_cookies"].Exec(cookie.Name, cookie.Value); err != nil {
+			return fmt.Errorf("Error inserting request cookie: %v", err)
 		}
 	}
 
@@ -159,6 +183,8 @@ func cleanupTemporaryTables(tx *sql.Tx) error {
 		"response_meta",
 		"path_params",
 		"request_json",
+		"request_cookies",
+		"response_cookies",
 	}
 
 	for _, table := range tables {

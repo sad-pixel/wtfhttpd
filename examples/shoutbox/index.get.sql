@@ -19,11 +19,12 @@ SELECT
     secure_hex(64) as token;
 
 INSERT INTO
+    response_cookies (name, value, secure, http_only, same_site, path)
+VALUES
+    ("csrf_token", @csrf, 0, 1, 'Lax', '/');
+
+INSERT INTO
     response_meta (name, value)
 VALUES
     ("status", "200"),
-    ("wtf-tpl", "shoutbox/shoutbox.html"),
-    (
-        "Set-Cookie",
-        "csrf_token=" || @csrf
-    );
+    ("wtf-tpl", "shoutbox/shoutbox.html");

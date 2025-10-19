@@ -197,6 +197,77 @@ func createHandler(app *App, path string, pathParams []string) http.HandlerFunc 
 			}
 		}
 
+		// Handle response cookies
+		rows, err = tx.Query("SELECT name, value, max_age, expires, path, domain, secure, http_only, same_site FROM response_cookies")
+		if err != nil {
+			log.Printf("Error querying response cookies: %v", err)
+		} else {
+			defer rows.Close()
+			log.Printf("Processing response cookies")
+			for rows.Next() {
+				var name, value, path, domain, sameSite string
+				var maxAge, secure, httpOnly sql.NullInt64
+				var expires sql.NullTime
+
+				if err := rows.Scan(&name, &value, &maxAge, &expires, &path, &domain, &secure, &httpOnly, &sameSite); err != nil {
+					log.Printf("Error scanning cookie row: %v", err)
+					continue
+				}
+
+				cookie := http.Cookie{
+					Name:  name,
+					Value: value,
+					Path:  path,
+				}
+
+				if maxAge.Valid {
+					cookie.MaxAge = int(maxAge.Int64)
+				}
+
+				if expires.Valid {
+					cookie.Expires = expires.Time
+				}
+
+				if domain != "" {
+					cookie.Domain = domain
+				}
+
+				if secure.Valid && secure.Int64 > 0 {
+					cookie.Secure = true
+				}
+
+				if httpOnly.Valid && httpOnly.Int64 > 0 {
+					cookie.HttpOnly = true
+				}
+
+				if sameSite != "" {
+					switch sameSite {
+					case "Strict":
+						cookie.SameSite = http.SameSiteStrictMode
+					case "Lax":
+						cookie.SameSite = http.SameSiteLaxMode
+					case "None":
+						cookie.SameSite = http.SameSiteNoneMode
+					default:
+						log.Printf("Unknown SameSite value: %s, defaulting to Lax", sameSite)
+						cookie.SameSite = http.SameSiteLaxMode
+					}
+				}
+
+				// If domain is blank, set it according to the host header
+				if cookie.Domain == "" {
+					host := r.Host
+					// Strip port number if present
+					if colonIndex := strings.Index(host, ":"); colonIndex != -1 {
+						host = host[:colonIndex]
+					}
+					cookie.Domain = host
+				}
+
+				http.SetCookie(w, &cookie)
+			}
+		}
+
 		if err := cleanupTemporaryTables(tx); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

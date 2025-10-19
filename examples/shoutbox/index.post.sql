@@ -5,15 +5,15 @@
 SELECT
     wtf_abort(403, 'Invalid CSRF token')
 WHERE
-    (
+    NOT EXISTS (
         SELECT
             value
         FROM
-            request_headers
+            request_cookies
         WHERE
-            name = 'Cookie'
-            AND value LIKE '%csrf_token=%'
-    ) NOT LIKE '%csrf_token=' || @csrf_token || '%';
+            name = 'csrf_token'
+            AND value = @csrf_token
+    );
 
 INSERT INTO
     shoutbox (name, comment, created_at)

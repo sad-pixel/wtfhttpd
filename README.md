@@ -37,6 +37,7 @@ For each request, wtfhttpd creates a set of temporary tables that you can query.
 - `request_form`: Contains all request form data fields (uploads aren't supported yet!)
 - `request_meta`: Contains metadata like `method`, `path`, and `remote_addr`.
 - `env_vars`: Contains environment variables from the server process that match the `env_prefix` from config.
+- `request_cookies`: Contains all cookies sent in the request headers.
 - `request_json`: Contains the flattened key-value representation of a JSON request body. This table is only created for `POST`, `PUT`, or `PATCH` requests with a `Content-Type: application/json` header.
 
 The `request_json` table has the following schema:
@@ -98,6 +99,54 @@ To control the response, you can INSERT into the `response_meta` table:
 - Set HTTP Status: `INSERT INTO response_meta VALUES ('status', '404');`
 - Set a Header: `INSERT INTO response_meta VALUES ('Content-Type', 'text/plain');`
 - Render a Template: `INSERT INTO response_meta VALUES ('wtf-tpl', 'path/to/template.html');`
+
+Of course. Here is the README section for cookie handling, written in the distinctive voice of `wtfhttpd`.
+
+---
+
+## Cookie Handling
+
+### Reading Incoming Cookies
+
+For every request, `wtfhttpd` parses the `Cookie` header and populates a temporary, read-only table called `request_cookies`.
+
+| Column  | Type | Description                   |
+| :------ | :--- | :---------------------------- |
+| `name`  | TEXT | The name of the cookie.       |
+| `value` | TEXT | The delicious, crumbly value. |
+
+So, to get a session token, you can simply:
+
+```sql
+SELECT value FROM request_cookies WHERE name = 'session_token';
+```
+
+### Setting Outgoing Cookies
+
+To set cookies, you can `INSERT` into the `response_cookies` table. `wtfhttpd` will intercept these inserts and transform them into proper `Set-Cookie` headers.
+
+**The `response_cookies` Schema:**
+
+| Column      | Type      | Description                                               | Default |
+| :---------- | :-------- | :-------------------------------------------------------- | :------ |
+| `name`      | TEXT      | The cookie's name. (Required)                             |         |
+| `value`     | TEXT      | The cookie's value. (Required)                            |         |
+| `max_age`   | INTEGER   | Lifetime in seconds. A negative value deletes the cookie. | `NULL`  |
+| `expires`   | TIMESTAMP | Absolute expiration time.                                 | `NULL`  |
+| `path`      | TEXT      | The scope of the cookie.                                  | `'/'`   |
+| `domain`    | TEXT      | The domain scope.                                         | `NULL`  |
+| `secure`    | INTEGER   | `1` for HTTPS only. **Default is `0` for localhost dev.** | `0`     |
+| `http_only` | INTEGER   | `1` makes it inaccessible to JavaScript. A good idea.     | `1`     |
+| `same_site` | TEXT      | CSRF protection. `'Strict'`, `'Lax'`, or `'None'`.        | `'Lax'` |
+
+Here's an example of setting cookies:
+
+```sql
+-- Set the cookie for the browser.
+INSERT INTO response_cookies (name, value, max_age, secure, http_only, same_site)
+VALUES ('session_token', @session_token, 86400, 1, 1, 'Strict'); -- 24 hours, HTTPS only, extra secure
+
+```
 
 ## SQL Directives
 
