@@ -26,8 +26,27 @@ func createHandler(app *App, path string, pathParams []string) http.HandlerFunc 
 			return
 		}
 
+		conn, err := app.DB.Conn(r.Context())
+		if err != nil { /* handle error */
+			http.Error(w, "Error connecting database: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer conn.Close()
+
+		_, err = conn.ExecContext(r.Context(), "ATTACH DATABASE ':memory:' AS wtfhttpd;")
+		if err != nil { /* handle error */
+			http.Error(w, "Error attaching in-memory database: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		defer func() {
+			if _, err := conn.ExecContext(r.Context(), "DETACH DATABASE wtfhttpd;"); err != nil {
+				log.Printf("Error detaching in-memory database: %v", err)
+			}
+		}()
+
 		// Create a transaction to work with temporary tables
-		tx, err := app.DB.Begin()
+		tx, err := conn.BeginTx(r.Context(), nil)
 		if err != nil {
 			http.Error(w, "Error starting transaction: "+err.Error(), http.StatusInternalServerError)
 			return
@@ -266,11 +285,6 @@ func createHandler(app *App, path string, pathParams []string) http.HandlerFunc 
 
 				http.SetCookie(w, &cookie)
 			}
-		}
-
-		if err := cleanupTemporaryTables(tx); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
 		}
 
 		if err := tx.Commit(); err != nil {

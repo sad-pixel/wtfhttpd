@@ -13,18 +13,18 @@ import (
 // setupTemporaryTables creates all necessary temporary tables for the request
 func setupTemporaryTables(tx *sql.Tx) error {
 	tables := []string{
-		`CREATE TEMPORARY TABLE query_params (name TEXT, value TEXT)`,
-		`CREATE TEMPORARY TABLE env_vars (name TEXT, value TEXT)`,
-		`CREATE TEMPORARY TABLE request_meta (name TEXT, value TEXT)`,
-		`CREATE TEMPORARY TABLE request_headers (name TEXT, value TEXT)`,
-		`CREATE TEMPORARY TABLE request_form (name TEXT, value TEXT)`,
-		`CREATE TEMPORARY TABLE path_params (name TEXT, value TEXT)`,
-		`CREATE TEMPORARY TABLE request_cookies (name TEXT, value TEXT)`,
-		`CREATE TEMPORARY TABLE request_json (path TEXT PRIMARY KEY NOT NULL, value ANY, type TEXT NOT NULL, json TEXT)`,
+		`CREATE TABLE wtfhttpd.query_params (name TEXT, value TEXT)`,
+		`CREATE TABLE wtfhttpd.env_vars (name TEXT, value TEXT)`,
+		`CREATE TABLE wtfhttpd.request_meta (name TEXT, value TEXT)`,
+		`CREATE TABLE wtfhttpd.request_headers (name TEXT, value TEXT)`,
+		`CREATE TABLE wtfhttpd.request_form (name TEXT, value TEXT)`,
+		`CREATE TABLE wtfhttpd.path_params (name TEXT, value TEXT)`,
+		`CREATE TABLE wtfhttpd.request_cookies (name TEXT, value TEXT)`,
+		`CREATE TABLE wtfhttpd.request_json (path TEXT PRIMARY KEY NOT NULL, value ANY, type TEXT NOT NULL, json TEXT)`,
 
 		// "Magic Tables" for the response
-		`CREATE TEMPORARY TABLE response_meta (name TEXT PRIMARY KEY, value TEXT)`,
-		`CREATE TEMPORARY TABLE response_cookies (
+		`CREATE TABLE wtfhttpd.response_meta (name TEXT PRIMARY KEY, value TEXT)`,
+		`CREATE TABLE wtfhttpd.response_cookies (
 			name TEXT NOT NULL,
 			value TEXT NOT NULL,
 			max_age INTEGER DEFAULT NULL,
@@ -166,30 +166,6 @@ func populateTemporaryTables(tx *sql.Tx, r *http.Request, pathParams []string, c
 					return fmt.Errorf("Error inserting row into request_json (%s): %w", row.Path, err)
 				}
 			}
-		}
-	}
-
-	return nil
-}
-
-// cleanupTemporaryTables drops all temporary tables
-func cleanupTemporaryTables(tx *sql.Tx) error {
-	tables := []string{
-		"query_params",
-		"request_meta",
-		"request_headers",
-		"request_form",
-		"env_vars",
-		"response_meta",
-		"path_params",
-		"request_json",
-		"request_cookies",
-		"response_cookies",
-	}
-
-	for _, table := range tables {
-		if _, err := tx.Exec(fmt.Sprintf("DROP TABLE IF EXISTS %s", table)); err != nil {
-			return fmt.Errorf("Error dropping %s table: %v", table, err)
 		}
 	}
 
