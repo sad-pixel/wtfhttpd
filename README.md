@@ -188,6 +188,11 @@ The following extra functions are available inside the sql environment:
 - `http_put(url, [headers_json], [body])` - Makes a PUT request to the specified URL
 - `http_patch(url, [headers_json], [body])` - Makes a PATCH request to the specified URL
 - `http_delete(url, [headers_json])` - Makes a DELETE request to the specified URL
+- `time_now([format])` - Returns the current time in the specified format (default: "2006-01-02 15:04:05")
+- `time_format(time_str, target_format, [source_format])` - Formats a time string from one format to another (default source format: "2006-01-02 15:04:05")
+- `time_add(time_str, duration_str, [format])` - Adds a duration to a time string (e.g., "1h30m", "-24h")
+- `time_diff(time_str1, time_str2, [format])` - Returns the difference between two time strings as a duration
+- `time_relative(time_str, [format])` - Returns a human-readable relative time string (e.g., "5 minutes ago", "in 2 days")
 
 ## HTTP Client
 

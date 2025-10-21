@@ -115,10 +115,10 @@ func createHandler(app *App, path string, pathParams []string) http.HandlerFunc 
 		for _, query := range parsedQueries {
 			validations := make(map[string]any)
 
-			log.Printf("Processing query: %s\n", query.Query)
-			if len(query.Directives) > 0 {
-				log.Printf("Query directives: %+v\n", query.Directives)
-			}
+			// log.Printf("Processing query: %s\n", query.Query)
+			// if len(query.Directives) > 0 {
+			// 	log.Printf("Query directives: %+v\n", query.Directives)
+			// }
 
 			for _, directive := range query.Directives {
 				if directive.name == "validate" && len(directive.params) >= 2 {
@@ -130,12 +130,12 @@ func createHandler(app *App, path string, pathParams []string) http.HandlerFunc 
 				errs := app.vd.ValidateMap(varsMap, validations)
 				if len(errs) > 0 {
 					// Validation failed
-					log.Printf("%+v", errs)
+					// log.Printf("%+v", errs)
 					http.Error(w, fmt.Sprintf("Validation error: %v", errs), http.StatusBadRequest)
 					return
 				}
 
-				log.Printf("Validation passed for fields: %v", validations)
+				// log.Printf("Validation passed for fields: %v", validations)
 			}
 
 			result, err := executeQuery(tx, query.Query, varsMap)
@@ -151,7 +151,7 @@ func createHandler(app *App, path string, pathParams []string) http.HandlerFunc 
 					// Store the result under the specified key
 					storeKey := directive.params[0]
 					results[storeKey] = result
-					log.Printf("Stored query result in '%s'", storeKey)
+					// log.Printf("Stored query result in '%s'", storeKey)
 					storeDirectiveFound = true
 					break
 				}
@@ -160,7 +160,7 @@ func createHandler(app *App, path string, pathParams []string) http.HandlerFunc 
 			// If no store directive was found, store the result in the "ctx" key
 			if !storeDirectiveFound {
 				results["ctx"] = result
-				log.Printf("No store directive found, stored query result in 'ctx'")
+				// log.Printf("No store directive found, stored query result in 'ctx'")
 			}
 
 			for _, directive := range query.Directives {
@@ -219,7 +219,7 @@ func createHandler(app *App, path string, pathParams []string) http.HandlerFunc 
 			log.Printf("Error querying response cookies: %v", err)
 		} else {
 			defer rows.Close()
-			log.Printf("Processing response cookies")
+			// log.Printf("Processing response cookies")
 			for rows.Next() {
 				var name, value, path, domain, sameSite string
 				var maxAge, secure, httpOnly sql.NullInt64

@@ -7,7 +7,9 @@ CREATE TABLE IF NOT EXISTS shoutbox (
 
 -- @wtf-store shoutbox_entries
 SELECT
-    *
+    name,
+    comment,
+    time_relative(created_at) as created_at
 FROM
     shoutbox
 ORDER BY

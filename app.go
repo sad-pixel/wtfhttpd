@@ -103,7 +103,6 @@ func (app *App) liveReloader() {
 				if event.Has(fsnotify.Create) {
 					fileInfo, err := os.Stat(event.Name)
 					if err == nil && fileInfo.IsDir() {
-						log.Printf("New directory created: %s, adding to watcher", event.Name)
 						watcher.Add(event.Name)
 					}
 				}

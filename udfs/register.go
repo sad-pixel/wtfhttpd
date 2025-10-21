@@ -27,11 +27,16 @@ func RegisterUdfs(kv *cache.KVCache) {
 		{"secure_hex", 1, true, secureHex},
 		{"build_query", 1, true, buildQuery},
 		{"parse_query", 1, true, parseQuery},
-		{"http_get", -1, false, httpGet},       // can take 1 or 2 arguments
-		{"http_post", -1, false, httpPost},     // can take 1-3 arguments
-		{"http_put", -1, false, httpPut},       // can take 1-3 arguments
-		{"http_patch", -1, false, httpPatch},   // can take 1-3 arguments
-		{"http_delete", -1, false, httpDelete}, // can take 1 or 2 arguments
+		{"http_get", -1, false, httpGet},          // can take 1 or 2 arguments
+		{"http_post", -1, false, httpPost},        // can take 1-3 arguments
+		{"http_put", -1, false, httpPut},          // can take 1-3 arguments
+		{"http_patch", -1, false, httpPatch},      // can take 1-3 arguments
+		{"http_delete", -1, false, httpDelete},    // can take 1 or 2 arguments
+		{"time_now", -1, false, TimeNow},          // can take 0 or 1 arguments
+		{"time_format", -1, true, TimeFormat},     // can take 2 or 3 arguments
+		{"time_add", -1, true, TimeAdd},           // can take 2 or 3 arguments
+		{"time_diff", -1, true, TimeDiff},         // can take 2 or 3 arguments
+		{"time_relative", -1, true, TimeRelative}, // can take 1 or 2 arguments
 	}
 
 	for _, fn := range functions {

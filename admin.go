@@ -394,7 +394,6 @@ func (app *App) getTableColumns(tableName string) ([]string, error) {
 	// unfortunately we can't parameterize the table name here as it gives a syntax error.
 	schemaRows, err := app.DB.Query(fmt.Sprintf("PRAGMA table_info(%s)", tableName))
 	if err != nil {
-		log.Println("here")
 		return nil, err
 	}
 	defer schemaRows.Close()
