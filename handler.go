@@ -6,23 +6,20 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 
-	"github.com/nikolalohinski/gonja/v2"
 	"github.com/nikolalohinski/gonja/v2/exec"
 )
 
 func createHandler(app *App, path string, pathParams []string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		app.hitsProcessed.Add(1)
-		effectivePath := filepath.Join(app.Config.WebRoot, path)
-
-		content, err := os.ReadFile(effectivePath)
-		if err != nil {
-			http.Error(w, "Error reading file: "+err.Error(), http.StatusInternalServerError)
+		// Trim the leading slash for consistency with cache keys
+		trimmedPath := strings.TrimPrefix(path, "/")
+		content, ok := app.sqlCache[trimmedPath]
+		if !ok {
+			http.Error(w, "Route not found in cache: "+trimmedPath, http.StatusNotFound)
 			return
 		}
 
@@ -300,23 +297,10 @@ func createHandler(app *App, path string, pathParams []string) http.HandlerFunc 
 
 		if tplName != "" {
 			w.Header().Set("Content-Type", "text/html")
-			// Prevent path traversal by ensuring the template path is within webroot
-			cleanPath := filepath.Clean(tplName)
-			if strings.Contains(cleanPath, "..") || strings.HasPrefix(cleanPath, "/") {
-				http.Error(w, "Invalid template path", http.StatusBadRequest)
-				return
-			}
 
-			templatePath := filepath.Join(app.Config.WebRoot, cleanPath)
-			// Ensure the path is still within webroot after cleaning
-			if !strings.HasPrefix(filepath.Clean(templatePath), filepath.Clean(app.Config.WebRoot)) {
-				http.Error(w, "Invalid template path", http.StatusBadRequest)
-				return
-			}
-
-			template, err := gonja.FromFile(templatePath)
-			if err != nil {
-				http.Error(w, "Error loading template: "+err.Error(), http.StatusInternalServerError)
+			template, ok := app.tpl[tplName]
+			if !ok {
+				http.Error(w, "Template not found: "+tplName, http.StatusInternalServerError)
 				return
 			}
 

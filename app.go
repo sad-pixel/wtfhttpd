@@ -12,6 +12,7 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/go-playground/validator/v10"
+	"github.com/nikolalohinski/gonja/v2/exec"
 	"github.com/sad-pixel/wtfhttpd/cache"
 )
 
@@ -23,10 +24,12 @@ type App struct {
 	hitsProcessed atomic.Int64
 	totalRoutes   atomic.Int64
 
-	mu     sync.RWMutex
-	kv     *cache.KVCache
-	router http.Handler
-	vd     *validator.Validate
+	mu       sync.RWMutex
+	kv       *cache.KVCache
+	router   http.Handler
+	vd       *validator.Validate
+	tpl      map[string]*exec.Template
+	sqlCache map[string]string
 }
 
 func (app *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -39,6 +42,9 @@ func (app *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (app *App) reloadRoutes() error {
 	log.Println("Reloading Routes...")
+
+	app.tpl = make(map[string]*exec.Template)
+	app.sqlCache = make(map[string]string)
 
 	// Clear the wtf_routes table before reloading
 	_, err := app.DB.Exec("DELETE FROM wtf_routes")

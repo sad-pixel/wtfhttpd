@@ -163,7 +163,7 @@ The available directives are:
 
 ## Templating
 
-Templates use jinja2 syntax (via [Gonja](https://github.com/nikolalohinski/gonja)), and can be anywhere in the webroot.
+Templates use jinja2 syntax (via [Gonja](https://github.com/nikolalohinski/gonja)), and can be anywhere in the webroot, but must have a ".tpl" somewhere in the filename.
 
 A default variable called `ctx` is present in the template's context, which will contain the results of the last query.
 Any stored variables created from `@wtf-store` are also available.

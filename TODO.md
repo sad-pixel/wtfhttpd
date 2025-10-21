@@ -32,8 +32,8 @@
   - [ ] URL Shortener
   - [ ] Paste
   - [x] External API example
-- [ ] cron jobs (from crons folder)
 - [ ] More control over what to do when validations fail (redirect back with flash messages?)
+- [ ] cron jobs (from crons folder)
 - [ ] persistent kv store (kv_set, kv_get)
 - [ ] background jobs (INSERT INTO background ...)
 - [ ] More context in templates (like request, etc)

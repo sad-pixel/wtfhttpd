@@ -27,4 +27,4 @@ INSERT INTO
     response_meta (name, value)
 VALUES
     ("status", "200"),
-    ("wtf-tpl", "shoutbox/shoutbox.html");
+    ("wtf-tpl", "shoutbox/shoutbox.tpl.html");

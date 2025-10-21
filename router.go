@@ -2,11 +2,14 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"slices"
 	"strings"
+
+	"github.com/nikolalohinski/gonja/v2"
 )
 
 // setupRoutes walks through the webroot directory and sets up HTTP routes
@@ -31,6 +34,20 @@ func processFile(app *App, path string, info os.FileInfo, err error, mux *http.S
 	file := filepath.Base(relativePath)
 	ext := filepath.Ext(file)
 
+	if strings.Contains(file, ".tpl") {
+		// Trim the leading slash for display and map key
+		displayPath := strings.TrimPrefix(relativePath, "/")
+		log.Println("Discovered Template: ", displayPath)
+		template, err := gonja.FromFile(path)
+		if err != nil {
+			log.Printf("Error loading template %s: %v", file, err)
+			return nil
+		}
+
+		app.tpl[displayPath] = template
+		return nil
+	}
+
 	if ext != ".sql" {
 		return nil
 	}
@@ -46,6 +63,18 @@ func processFile(app *App, path string, info os.FileInfo, err error, mux *http.S
 	} else {
 		registerGenericRoute(app, fileName, dir, relativePath, mux)
 	}
+
+	// Read the SQL file content and store it in the sqlCache
+	content, err := os.ReadFile(path)
+	if err != nil {
+		log.Printf("Error reading SQL file %s: %v", path, err)
+		return err
+	}
+	// Trim the leading slash for consistency
+	cacheKey := strings.TrimPrefix(relativePath, "/")
+	app.sqlCache[cacheKey] = string(content)
+	log.Println("Loaded route file ", cacheKey)
+
 	app.totalRoutes.Add(1)
 	return nil
 }
