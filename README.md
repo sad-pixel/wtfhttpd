@@ -231,6 +231,11 @@ The returned JSON has the following schema:
 
 If a network error occurs (e.g., DNS failure, timeout), the body would be null and the error field would contain the error message.
 
+## Security Notes
+
+wtfhttpd takes security seriously. SQL injection is impossible by design, as everything is either table values or named parameters, and it is impossible for a developer to perform any sort of string concatenation to create sql queries.
+Values passed to templates are also escaped by default, and there is no way to turn this off.
+
 ## Route introspection
 
 All registered routes are available in the `wtf_routes` table. This is used in the admin interface, but is also available for sql scripts to query.

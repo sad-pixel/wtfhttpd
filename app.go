@@ -68,6 +68,11 @@ func (app *App) reloadRoutes() error {
 	app.router = mux
 	app.mu.Unlock()
 
+	if err := app.indexContent(); err != nil {
+		log.Printf("Error indexing content: %v", err)
+		return err
+	}
+
 	log.Printf("Total routes: %d", app.totalRoutes.Load())
 	return nil
 }

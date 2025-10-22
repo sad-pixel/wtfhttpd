@@ -22,6 +22,7 @@
 - [x] JSON parsing
 - [x] cookies temp table
 - [x] query param udfs
+- [x] template caching
 - [x] http client (http_get, http_post etc)
 - [ ] improve wtf_abort implementation
 - [ ] session auth
@@ -44,9 +45,10 @@
 - [ ] Markdown indexing and rendering
 - [ ] DuckDB?
 - [ ] More UDFs
+- [ ] More directives
 - [ ] Static File serving
 - [ ] Upload Handling
 - [ ] incoming email -> sql trigger
 - [ ] rebuild the admin using js/lua and sql
 - [ ] rewrite my blog and other services in this
-- [ ] figure out ways to make it more cursed
+- [ ] nameserver support

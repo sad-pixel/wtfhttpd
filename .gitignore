@@ -4,3 +4,4 @@ wtf.db
 wtfhttpd
 combined_go_files.txt
 dump.py
+.DS_Store
